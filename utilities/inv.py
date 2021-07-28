@@ -25,9 +25,9 @@ class StatesFile:
 
 def __inv__(**kwargs):
     st = ''
-    for k, v in kwargs:
-        st += (k + ' ' + v + ',')
-    StatesFile.append(st)
+    for k, v in kwargs.items():
+        st += (k + ' ' + str(v) + ',')
+    StatesFile.append(st + "\n")
 
 
 
