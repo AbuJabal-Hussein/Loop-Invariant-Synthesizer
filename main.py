@@ -1,6 +1,6 @@
 
-from LoopInvSynth import LoopInvSynth
-
+# from LoopInvSynth import LoopInvSynth
+from VC_Generation import VCGenerator, read_source_file
 
 
 
@@ -22,7 +22,8 @@ from LoopInvSynth import LoopInvSynth
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    LoopInvSynth()
-    print('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    # import z3Test
+    # LoopInvSynth()
+    # print('PyCharm')
+    input_code = read_source_file("benchmarks/TestInv.py")
+    VCGenerator()(input_code)
