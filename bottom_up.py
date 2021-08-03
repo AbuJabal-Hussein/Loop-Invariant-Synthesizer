@@ -1,9 +1,9 @@
 from z3 import *
-
+from parsing.earley.earley import Grammar
 
 class BottomUp:
 
-    def __init__(self, grammar, tokens, prog_states_file, solver=None):
+    def __init__(self, grammar, prog_states_file, solver=None):
         '''
         Initialised with grammar and its tokens
         :param grammar: The Grammar. non-terminals on the right-hand side of production rules are delimited by spaces
@@ -11,8 +11,7 @@ class BottomUp:
         :param tokens: The Grammar's tokens
         '''
 
-        self.grammar = grammar
-        self.tokens = tokens
+        self.grammar = Grammar.from_string(grammar)
         self.p = list()
         self.program_states_file = prog_states_file
         self.program_states = list()
@@ -42,7 +41,14 @@ class BottomUp:
                 s.reset()
         return batch
 
-
+    def check_sat(self, inv):
+        for state in self.program_states:
+            s = Solver()
+            s.add(state)
+            s.add(inv)
+            if s.check() == unsat:
+                return False
+        return True
 
     def get_parsed_states(self):
         return self.program_states
@@ -106,12 +112,8 @@ class BottomUp:
             curr_batch = self.elimEquivalents(
                 curr_batch)  # probably using z3, since I want to find similar invariants(formulas) not programs
             for inv in curr_batch:
-                for state in self.program_states:
-                    s = Solver()
-                    s.add(state)
-                    if s.check() == sat:
-                        # TODO: it yields if one state is good. need to check on each and yield if all
-                        yield inv
+                if self.check_sat(inv):
+                    yield inv
             self.p = self.p + curr_batch
 
 
