@@ -25,7 +25,12 @@ cons2 = Implies(And(cond, i < len_a, s_ == s + a[i], i_ == i + 1, Implies(m < a[
 cons4 = Implies(And(cond, Not(i < len_a), s_ == s, m_ == m, i_ == i), s_ <= len_a * m_)
 
 
-solver.add(Not(And(cons1, cons2, cons4)))
+arr = Array('a', IntSort(), IntSort())
+brr = Array('b', IntSort(), IntSort())
+
+statement = And(arr[0] == 1, arr[1] == 2, arr[2] == 3, brr[0] == arr[2], brr[1] == arr[1], brr[2] == arr[0])
+solver.add(statement)
+# solver.add(Not(And(cons1, cons2, cons4)))
 # for cons in [cons1, cons2, cons3, cons4]:
 #     print(cons.__str__() + ":\n")
 #     solver.add(cons)
@@ -36,3 +41,5 @@ print(result)
 if result == sat:
     print(solver.model())
 
+if __name__ == '__main__':
+    print('-------')

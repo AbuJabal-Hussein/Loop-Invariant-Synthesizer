@@ -43,6 +43,10 @@ class Tree(object):
     @property
     def leaves(self):
         return [n for n in PreorderWalk(self) if not n.subtrees]
+
+    @property
+    def before_leaves(self):
+        return [n for n in PreorderWalk(self) if n.subtrees and not n.subtrees[0].subtrees]
     
     @property
     def terminals(self):

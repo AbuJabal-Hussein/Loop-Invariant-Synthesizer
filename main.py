@@ -25,5 +25,5 @@ if __name__ == '__main__':
     # import z3Test
     # LoopInvSynth()
     # print('PyCharm')
-    input_code = read_source_file("benchmarks/TestInv.py")
+    input_code = read_source_file("benchmarks/test_scope.py")
     VCGenerator()(input_code)

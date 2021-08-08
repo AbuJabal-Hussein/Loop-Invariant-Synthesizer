@@ -10,31 +10,55 @@ class PythonParser(object):
     TOKENS = r"(if|else|elif|while)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+)" \
              r" (?P<ASSOP>[+\-*/]=) (?P<MULTDIV>[*/]) (?P<PLUSMINUS>[+\-])  :" \
              r" (?P<RPAREN>\)) (?P<LSPAREN>\[) (?P<RSPAREN>\]) " \
-             r" (?P<NOT>not) " \
+             r" (?P<NOT>not) (?P<FALSE>False) (?P<TRUE>True) " \
              r"(?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse)  (?P<STR1>\'([^\n\r\"\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\\]|\\[rnt\"\'\\])+\") " \
-             r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) (?P<INDENT>(\t)+)  =".split()
+             r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) (?P<INDENT2>(\t\t)) (?P<INDENT>(\t))  =".split()
     GRAMMAR = r"""
     S   ->   S1 | S1 NEWLINE | S1 NEWLINE INDENT   |   S1 NEWLINE S
     
-    S1  ->   ID = E   |   IF_S   |   WHILE_S   |   ID ASSOP E   |   DEREF = E   |   INV_FUNC | FUNCS
+    S1  ->   ID = E   | IF_S5 |  IF_S4 | IF_S3 | IF_S2 | IF_S  | WHILE_S5 | WHILE_S4 | WHILE_S3 | WHILE_S2 | WHILE_S  |     ID ASSOP E   |   DEREF = E   |   INV_FUNC | FUNCS
     S1  ->   LPAREN S RPAREN
     
-    IF_S -> if E : BLOCK NEWLINE ELIF_S | if E : BLOCK NEWLINE ELSE_S | if E : BLOCK
-    ELIF_S -> elif E : BLOCK NEWLINE ELIF_S | elif E : BLOCK NEWLINE ELSE_S | elif E : BLOCK
+    IF_S -> if E : BLOCK | if E : BLOCK NEWLINE ELSE_S | if E : BLOCK NEWLINE ELIF_S
+    IF_S2 -> if E : BLOCK2 | if E : BLOCK2 NEWLINE INDENT ELSE_S2 | if E : BLOCK2 NEWLINE INDENT ELIF_S2 
+    IF_S3 -> if E : BLOCK3 | if E : BLOCK3 NEWLINE INDENT2 ELSE_S3 | if E : BLOCK3 NEWLINE INDENT2 ELIF_S3
+    IF_S4 -> if E : BLOCK4 | if E : BLOCK4 NEWLINE INDENT3 ELSE_S4 | if E : BLOCK4 NEWLINE INDENT3 ELIF_S4
+    IF_S5 -> if E : BLOCK5 | if E : BLOCK5 NEWLINE INDENT4 ELSE_S5 | if E : BLOCK5 NEWLINE INDENT4 ELIF_S5
+    
+    ELIF_S -> elif E : BLOCK | elif E : BLOCK NEWLINE ELSE_S | elif E : BLOCK NEWLINE ELIF_S
+    ELIF_S2 -> elif E : BLOCK2 | elif E : BLOCK2 NEWLINE INDENT ELSE_S2 | elif E : BLOCK2 NEWLINE INDENT ELIF_S2
+    ELIF_S3 -> elif E : BLOCK3 | elif E : BLOCK3 NEWLINE INDENT2 ELSE_S3 | elif E : BLOCK3 NEWLINE INDENT2 ELIF_S3
+    ELIF_S4 -> elif E : BLOCK4 | elif E : BLOCK4 NEWLINE INDENT3 ELSE_S4 | elif E : BLOCK4 NEWLINE INDENT3 ELIF_S4
+    ELIF_S5 -> elif E : BLOCK5 | elif E : BLOCK5 NEWLINE INDENT4 ELSE_S5 | elif E : BLOCK5 NEWLINE INDENT4 ELIF_S5
+      
     ELSE_S -> else : BLOCK
+    ELSE_S2 -> else : BLOCK2
+    ELSE_S3 -> else : BLOCK3
+    ELSE_S4 -> else : BLOCK4
+    ELSE_S5 -> else : BLOCK5
+    
     WHILE_S -> while E : BLOCK
+    WHILE_S2 -> while E : BLOCK2
+    WHILE_S3 -> while E : BLOCK3
+    WHILE_S4 -> while E : BLOCK4
+    WHILE_S5 -> while E : BLOCK5
     
     BLOCK ->  NEWLINE INDENT S1 | NEWLINE INDENT S1 BLOCK
-        
+    BLOCK2 ->  NEWLINE INDENT2 S1 | NEWLINE INDENT2 S1 BLOCK2
+    BLOCK3 ->  NEWLINE INDENT3 S1 | NEWLINE INDENT3 S1 BLOCK3
+    BLOCK4 ->  NEWLINE INDENT4 S1 | NEWLINE INDENT4 S1 BLOCK4
+    BLOCK5 ->  NEWLINE INDENT5 S1 | NEWLINE INDENT5 S1 BLOCK5
+
     E   ->   LPAREN E RPAREN | UN_REL E  |    E MULTDIV E   |   E PLUSMINUS E   | E RELOP E
     E   ->   E BI_REL E | LIST_E | DEREF | FUNCS
     E   ->   E0
     FUNCS -> LEN_FUNC | REVERSE_FUNC
     LEN_FUNC   -> LEN LPAREN E RPAREN
     INV_FUNC   -> INV LPAREN INV_ARGS RPAREN
-    REVERSE_FUNC     -> REVERSE CALL
-    E0  ->   ID   |   NUM   |   STR
+    REVERSE_FUNC -> REVERSE CALL
+    E0  ->   ID   |   NUM   |   STR   | BOOL
     STR ->   STR1 | STR2
+    BOOL -> TRUE | FALSE
 
     BI_REL -> AND | OR
     UN_REL -> NOT
@@ -58,7 +82,6 @@ class PythonParser(object):
         earley.parse()
         
         if earley.is_valid_sentence():
-            print(earley)
             trees = ParseTrees(earley)
             print(trees)
             assert(len(trees) == 1)
@@ -74,8 +97,8 @@ class PythonParser(object):
         lst.append(self.postprocess(t.subtrees[0]))
         return lst
 
-    def postprocess(self, t):
-        if t.root in ['γ', 'S', 'S1', 'E', 'E0', 'LIST_ITEMS', 'INV_ARGS'] and len(t.subtrees) == 1:
+    def postprocess(self, t, parent_data=None):
+        if t.root in ['γ', 'S', 'S1', 'E', 'E0', 'LIST_ITEMS', 'INV_ARGS', 'FUNCS', 'FUNC_ARGS'] and len(t.subtrees) == 1:
             return self.postprocess(t.subtrees[0])
         elif t.root == 'S' and (len(t.subtrees) == 2 or (len(t.subtrees) == 3 and t.subtrees[2].root == 'INDENT')):
             return self.postprocess(t.subtrees[0])
@@ -89,22 +112,22 @@ class PythonParser(object):
             elif t.subtrees[1].root == 'S':
                 return self.postprocess(t.subtrees[1])
 
-        elif t.root in ['IF_S', 'ELIF_S']:
+        elif t.root in ['IF_S', 'IF_S2', 'IF_S3', 'IF_S4', 'IF_S5', 'ELIF_S', 'ELIF_S2', 'ELIF_S3', 'ELIF_S4', 'ELIF_S5']:
             if len(t.subtrees) == 4:
                 return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3])])
-            elif len(t.subtrees) == 6:
-                return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3]), self.postprocess(t.subtrees[5])])
-        elif t.root == 'ELSE_S':
+            elif len(t.subtrees) == 7:
+                return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3]), self.postprocess(t.subtrees[6])])
+        elif t.root in ['ELSE_S', 'ELSE_S2', 'ELSE_S3', 'ELSE_S4', 'ELSE_S5']:
             return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[2])])
 
-        elif t.root == 'WHILE_S':
+        elif t.root in ['WHILE_S', 'WHILE_S2', 'WHILE_S3', 'WHILE_S4', 'WHILE_S5']:
             return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3])])
 
-        elif t.root == 'BLOCK':
+        elif t.root in ['BLOCK', 'BLOCK2', 'BLOCK3', 'BLOCK4', 'BLOCK5']:
             if len(t.subtrees) == 3:
-                return Tree(t.root, [self.postprocess(t.subtrees[2])])
+                return Tree('BLOCK', [self.postprocess(t.subtrees[2])])
             else:
-                return Tree(t.root, [self.postprocess(t.subtrees[2]), self.postprocess(t.subtrees[3])])
+                return Tree('BLOCK', [self.postprocess(t.subtrees[2]), self.postprocess(t.subtrees[3])])
 
         elif t.root == 'E':
             if len(t.subtrees) == 2:
@@ -124,7 +147,8 @@ class PythonParser(object):
             else:  # len(t.subtrees) == 3
                 args = t.subtrees[2]
                 lst = [self.postprocess((args.subtrees[0]))]
-                return Tree(t.root, lst + self.tree_to_list(args.subtrees[2]))
+                lst = lst if len(args.subtrees) == 1 else lst + self.tree_to_list(args.subtrees[2])
+                return Tree(t.root, lst)
 
         elif t.root == 'LEN_FUNC':
             return Tree(t.subtrees[0].subtrees[0].root, [self.postprocess(t.subtrees[2])])
@@ -135,7 +159,8 @@ class PythonParser(object):
             else:  # len(t.subtrees) == 3
                 args = t.subtrees[1]
                 lst = [self.postprocess((args.subtrees[0]))]
-                return Tree(t.root, lst + self.tree_to_list(args.subtrees[2]))
+                lst = lst if len(args.subtrees) == 1 else lst + self.tree_to_list(args.subtrees[2])
+                return Tree(t.root, lst)
 
         # elif t.root in ['LIST_ITEMS', 'INV_ARGS']:  # it should be guaranteed that len(t.subtrees) == 3
         #     lst = [self.postprocess((t.subtrees[0]))]
@@ -153,6 +178,25 @@ class PythonParser(object):
         elif t.root == 'NUM':
             return Tree(t.root, [Tree(int(t.subtrees[0].root))])  # parse ints
 
+        elif t.root == 'BOOL':
+            return Tree(t.root, [Tree(t.subtrees[0].subtrees[0].root == 'True')])
+
+        elif t.root == 'STR':
+            return Tree(t.root, [t.subtrees[0].subtrees[0]])
+
+        elif t.root == 'CALL':
+            # return  Tree(parent_data, [self.postprocess(t.subtrees[1])])
+            if len(t.subtrees) == 2:
+                return Tree(parent_data)
+            else:  # len(t.subtrees) == 3
+                args = t.subtrees[1].subtrees[0]
+                lst = [self.postprocess((args.subtrees[0]))]
+                lst = lst if len(args.subtrees) == 1 else lst + self.tree_to_list(args.subtrees[2])
+                return Tree(parent_data, lst)
+
+        elif t.root == 'REVERSE_FUNC':
+            return self.postprocess(t.subtrees[1], parent_data=t.subtrees[0].subtrees[0].root)
+
         return Tree(t.root, [self.postprocess(s) for s in t.subtrees])
     
 
@@ -161,7 +205,7 @@ def read_source_file(path):
     src = src_file.read()
     src_file.close()
     # print(src)
-    return src
+    return src.lstrip()
 
 
 
@@ -215,11 +259,12 @@ if __name__ == '__main__':
     # todo: fix issue: signed numbers does not work     - fixed
     # todo: add String support                          - fixed
     # todo: more list function?
+    # todo: add comments support
 
     # ast = PythonParser()("while i < n and n >= 0:\n"
     #                      "\t__inv__(i=i, n=n, x=x, myList=myList)\n"
     #                      "\tx += 1")
-    ast = PythonParser()(read_source_file("benchmarks/b1.py"))
+    ast = PythonParser()(read_source_file("benchmarks/test_scope.py"))
 
     if ast:
         print(">> Valid program.")
