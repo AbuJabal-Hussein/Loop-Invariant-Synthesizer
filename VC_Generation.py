@@ -10,13 +10,6 @@ OP = {'+': operator.add, '-': operator.sub,
       'AND': And, 'OR': Or}
 
 
-# todo: edit this to include more types and tagged variables
-# def mk_env(pvars):
-#     pvars = pvars + [v + '_' for v in pvars]
-#     vars_dict = {v: Int(v) for v in pvars if v not in ['myList', 'myList_']}
-#     vars_dict['myList'] = Array('myList', IntSort(), IntSort())
-#     vars_dict['myList_'] = Array('myList_', IntSort(), IntSort())
-#     return vars_dict
 
 
 class VCGenerator(object):
@@ -30,7 +23,9 @@ class VCGenerator(object):
             print(">> Invalid program.")
             return None
         print(">> Valid program.")
+        print('ast:')
         print(ast)
+        print('')
 
         pre_loop, loop_cond, loop_body, post_loop = self.generate_vc(ast)
         print(pre_loop)
@@ -55,12 +50,6 @@ class VCGenerator(object):
     #     return while_node_parent.subtrees
 
     def generate_vc(self, ast):
-
-        def gen_pvars():
-            v = ast.before_leaves
-            print('-------------')
-            print(v)
-
 
         def gen_name():
             num = 0
@@ -112,17 +101,17 @@ class VCGenerator(object):
                 var_name = expr1.subtrees[0].root
                 eval_rhs = eval_expr(expr2, tagged_id=False)
                 if expr2.root == 'NUM' or isinstance(eval_rhs, ArithRef):
-                    vars_dict[var_name] = (Int(var_name), IntSort(), 1)
-                    vars_dict[var_name + '_'] = (Int(var_name + '_'), IntSort(), 1)
+                    vars_dict[var_name] = [Int(var_name), IntSort(), 1]
+                    vars_dict[var_name + '_'] = [Int(var_name + '_'), IntSort(), 1]
                 elif expr2.root == 'STR':
-                    vars_dict[var_name] = (String(var_name), StringSort(), 1)
-                    vars_dict[var_name + '_'] = (String(var_name + '_'), StringSort(), 1)
+                    vars_dict[var_name] = [String(var_name), StringSort(), 1]
+                    vars_dict[var_name + '_'] = [String(var_name + '_'), StringSort(), 1]
                 elif expr2.root == "BOOL" or isinstance(eval_rhs, BoolRef):
-                    vars_dict[var_name] = (Bool(var_name), BoolSort(), 1)
-                    vars_dict[var_name + '_'] = (Bool(var_name + '_'), BoolSort(), 1)
+                    vars_dict[var_name] = [Bool(var_name), BoolSort(), 1]
+                    vars_dict[var_name + '_'] = [Bool(var_name + '_'), BoolSort(), 1]
                 elif expr2.root in ['LIST_E', 'reverse']:
-                    vars_dict[var_name] = (Array(var_name, IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), len(expr2.subtrees)) #todo: should change tuple to list.. so we can change the arr_len later on
-                    vars_dict[var_name + '_'] = (Array(var_name + '_', IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), len(expr2.subtrees))
+                    vars_dict[var_name] = [Array(var_name, IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), eval_rhs[3]]
+                    vars_dict[var_name + '_'] = [Array(var_name + '_', IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), eval_rhs[3]]
 
                 eval_lhs = eval_expr(expr1, tagged_id=True)
                 if expr2.root in ['LIST_E', 'reverse']:
@@ -147,7 +136,8 @@ class VCGenerator(object):
 
             elif expr.root == 'LIST_E':
                 if len(expr.subtrees) == 0:
-                    arr = IntVector(next(gen_var), 0)
+                    # arr = IntVector(next(gen_var), 0)
+                    arr = Array(next(gen_var), IntSort(), IntSort())
                     return True, arr, IntSort(), 0
 
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -189,16 +179,21 @@ class VCGenerator(object):
                     item_type = IntSort()
 
                 arr = Array(next(gen_var), IntSort(), item_type)
-                print(arr2)
-                print(arr_len)
-                print(arr2.range())
-
                 if expr.subtrees[0].root not in ['LIST_E', 'reverse']:
                     arr_value = And([arr[i] == arr2[arr_len - i - 1] for i in range(arr_len)])
                 else:
                     arr_value = And(eval_items[0][0], And([arr[i] == arr2[arr_len - i - 1] for i in range(arr_len)]))
 
                 return arr_value, arr, item_type, arr_len
+
+            elif expr.root == 'len':
+                len_var = Int(next(gen_var))
+                lst_eval = (eval_expr(expr.subtrees[0]))
+                if isinstance(lst_eval, list):
+                    arr_len = lst_eval[3]
+                else:
+                    arr_len = vars_dict[lst_eval][2]  # todo: fix this shit
+                return OP('==')(len_var == arr_len)
 
             return True
 
@@ -215,6 +210,11 @@ class VCGenerator(object):
             elif t.root == 'S':
                 if len(t.subtrees) == 1:
                     return construct_tr(t.subtrees[0])
+                # this case happens when the while is the last statement in the program
+                if t.subtrees[1].root == 'while':
+                    res = construct_tr(t.subtrees[0])
+                    tr_lists[1] = construct_tr(t.subtrees[1])
+                    return res
                 return And(construct_tr(t.subtrees[0]), construct_tr(t.subtrees[1]))
             elif t.root == 'while':
                 cond = eval_expr(t.subtrees[0])
@@ -239,21 +239,14 @@ class VCGenerator(object):
                     return And(construct_tr(t.subtrees[0]), construct_tr(t.subtrees[1]))
 
             elif t.root in ['=', '+=', '-=', '*=', '/=']:
-                print('ttttttttttttttttttttt')
-                print(t)
                 return eval_expr(t)
 
             # function call statements does not affect the program, assuming that they don't have side effects on the program variables
             # function expressions do affect the program state.. we take care of them in eval_expr
-            elif t.root in ['INV_FUNC', 'reverse']:
+            elif t.root in ['INV_FUNC', 'reverse', 'len']:
                 return True
 
             return True
-
-        # todo: extract the pvars from the AST
-        # gen_pvars()
-        # pvars = ['i', 'n', 'x', 'myList', 'i', 'y']
-        # vars_dict = mk_env(pvars)
 
         vars_dict = {}
         tr_lists = [True, [True, True], True]

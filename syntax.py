@@ -83,7 +83,6 @@ class PythonParser(object):
         
         if earley.is_valid_sentence():
             trees = ParseTrees(earley)
-            print(trees)
             assert(len(trees) == 1)
             return self.postprocess(trees.nodes[0])
         else:
@@ -256,10 +255,19 @@ if __name__ == '__main__':
                          )
     """
     # todo: x = a > 0 and b < 3  is being interpreted as x = ((a > 0) and b) < 3 but it should be x = (a > 0) and (b < 3)
-    # todo: fix issue: signed numbers does not work     - fixed
-    # todo: add String support                          - fixed
+
     # todo: more list function?
     # todo: add comments support
+
+    """
+    append
+    remove
+    sort ??
+    sum
+    find
+    substring
+    
+    """
 
     # ast = PythonParser()("while i < n and n >= 0:\n"
     #                      "\t__inv__(i=i, n=n, x=x, myList=myList)\n"
