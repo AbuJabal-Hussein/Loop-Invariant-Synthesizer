@@ -100,7 +100,7 @@ class VCGenerator(object):
                 expr2 = expr.subtrees[1]
                 var_name = expr1.subtrees[0].root
                 eval_rhs = eval_expr(expr2, tagged_id=False)
-                if expr2.root == 'NUM' or isinstance(eval_rhs, ArithRef):
+                if expr2.root == 'NUM' or isinstance(eval_rhs, ArithRef) or expr2.root == 'len':
                     vars_dict[var_name] = [Int(var_name), IntSort(), 1]
                     vars_dict[var_name + '_'] = [Int(var_name + '_'), IntSort(), 1]
                 elif expr2.root == 'STR':
@@ -190,10 +190,8 @@ class VCGenerator(object):
                 len_var = Int(next(gen_var))
                 lst_eval = (eval_expr(expr.subtrees[0]))
                 if isinstance(lst_eval, list):
-                    arr_len = lst_eval[3]
-                else:
-                    arr_len = vars_dict[lst_eval][2]  # todo: fix this shit
-                return OP('==')(len_var == arr_len)
+                    return lst_eval[3]
+                return vars_dict[str(lst_eval)][2]
 
             return True
 
