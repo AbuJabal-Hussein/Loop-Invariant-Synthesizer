@@ -74,7 +74,7 @@ class VCGenerator(object):
                 item_type = IntSort()
             return item_type
 
-        def eval_expr(expr, tagged_id=False):
+        def eval_expr(expr, tagged_id=False, collected_vars=None):
             if expr.root == 'ID':
                 var_name = expr.subtrees[0].root
                 var_name = var_name if not tagged_id else var_name + '_'
@@ -100,13 +100,13 @@ class VCGenerator(object):
                 expr2 = expr.subtrees[1]
                 var_name = expr1.subtrees[0].root
                 eval_rhs = eval_expr(expr2, tagged_id=False)
-                if expr2.root == 'NUM' or isinstance(eval_rhs, ArithRef) or expr2.root == 'len':
+                if expr2.root == 'NUM' or isinstance(eval_rhs, ArithRef) or expr2.root == 'len' or type(eval_rhs) == int:
                     vars_dict[var_name] = [Int(var_name), IntSort(), 1]
                     vars_dict[var_name + '_'] = [Int(var_name + '_'), IntSort(), 1]
                 elif expr2.root == 'STR':
                     vars_dict[var_name] = [String(var_name), StringSort(), 1]
                     vars_dict[var_name + '_'] = [String(var_name + '_'), StringSort(), 1]
-                elif expr2.root == "BOOL" or isinstance(eval_rhs, BoolRef):
+                elif expr2.root == "BOOL" or isinstance(eval_rhs, BoolRef) or type(eval_rhs) == bool:
                     vars_dict[var_name] = [Bool(var_name), BoolSort(), 1]
                     vars_dict[var_name + '_'] = [Bool(var_name + '_'), BoolSort(), 1]
                 elif expr2.root in ['LIST_E', 'reverse']:
@@ -114,6 +114,9 @@ class VCGenerator(object):
                     vars_dict[var_name + '_'] = [Array(var_name + '_', IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), eval_rhs[3]]
 
                 eval_lhs = eval_expr(expr1, tagged_id=True)
+                if not(collected_vars is None):
+                    collected_vars.append(OP['=='](eval_lhs, eval_expr(expr1, tagged_id=False)))
+
                 if expr2.root in ['LIST_E', 'reverse']:
                     return And(OP['=='](eval_lhs, eval_rhs[1]), eval_rhs[0])
                 else:
@@ -124,6 +127,8 @@ class VCGenerator(object):
                 expr2 = expr.subtrees[1]
                 eval_lhs = eval_expr(expr1, tagged_id=True)
                 eval_rhs = eval_expr(expr2, tagged_id=False)
+                if collected_vars is not None:
+                    collected_vars.append(OP['=='](eval_lhs, eval_expr(expr1, tagged_id=False)))
                 return OP['=='](eval_lhs, OP[expr.root[0]](eval_lhs, eval_rhs))
 
             elif expr.root == 'DEREF':  # if this doesnt work, try operator.getitem and operator.setitem
@@ -195,49 +200,52 @@ class VCGenerator(object):
 
             return True
 
-        def construct_tr(t):
+        def construct_tr(t, collected_vars=None):
             # here evaluate the statements, and in eval_expr evaluate the expressions
 
             if t.root == 'S' and len(t.subtrees) > 0 and t.subtrees[0].root == 'while':
                 # process the while body
-                tr_lists[1] = construct_tr(t.subtrees[0])
+                tr_lists[1] = construct_tr(t.subtrees[0], collected_vars=collected_vars)
                 # process the statements after the while, if exists
                 if len(t.subtrees) == 2:
-                    tr_lists[2] = construct_tr(t.subtrees[1])
+                    tr_lists[2] = construct_tr(t.subtrees[1], collected_vars=collected_vars)
                 return True
             elif t.root == 'S':
                 if len(t.subtrees) == 1:
-                    return construct_tr(t.subtrees[0])
+                    return construct_tr(t.subtrees[0], collected_vars=collected_vars)
                 # this case happens when the while is the last statement in the program
                 if t.subtrees[1].root == 'while':
-                    res = construct_tr(t.subtrees[0])
-                    tr_lists[1] = construct_tr(t.subtrees[1])
+                    res = construct_tr(t.subtrees[0], collected_vars=collected_vars)
+                    tr_lists[1] = construct_tr(t.subtrees[1], collected_vars=collected_vars)
                     return res
-                return And(construct_tr(t.subtrees[0]), construct_tr(t.subtrees[1]))
+                return And(construct_tr(t.subtrees[0], collected_vars=collected_vars), construct_tr(t.subtrees[1], collected_vars=collected_vars))
             elif t.root == 'while':
                 cond = eval_expr(t.subtrees[0])
-                return [cond, construct_tr(t.subtrees[1])]
+                return [cond, construct_tr(t.subtrees[1], collected_vars=collected_vars)]
 
             elif t.root in ['if', 'elif']:
                 cond = eval_expr(t.subtrees[0])
-                body = construct_tr(t.subtrees[1])
                 if len(t.subtrees) == 3:
-                    elif_body = construct_tr(t.subtrees[2])
+                    body = construct_tr(t.subtrees[1], collected_vars=collected_vars)
+                    elif_body = construct_tr(t.subtrees[2], collected_vars=collected_vars)
                     return And(Implies(cond, body), Implies(Not(cond), elif_body))
+                assigned_vars = []
+                body = construct_tr(t.subtrees[1], assigned_vars)
+                unchanged_vars = And(assigned_vars)
                 return And(Implies(cond, body),
-                           Implies(Not(cond), Not(body)))  # todo: change Not(body) to something else, like m_ = m
+                           Implies(Not(cond), unchanged_vars))
 
             elif t.root == 'else':
-                return construct_tr(t.subtrees[0])
+                return construct_tr(t.subtrees[0], collected_vars=collected_vars)
 
             elif t.root == 'BLOCK':
                 if len(t.subtrees) == 1:
-                    return construct_tr(t.subtrees[0])
+                    return construct_tr(t.subtrees[0], collected_vars=collected_vars)
                 elif len(t.subtrees) == 2:
-                    return And(construct_tr(t.subtrees[0]), construct_tr(t.subtrees[1]))
+                    return And(construct_tr(t.subtrees[0], collected_vars=collected_vars), construct_tr(t.subtrees[1], collected_vars=collected_vars))
 
             elif t.root in ['=', '+=', '-=', '*=', '/=']:
-                return eval_expr(t)
+                return eval_expr(t, collected_vars=collected_vars)
 
             # function call statements does not affect the program, assuming that they don't have side effects on the program variables
             # function expressions do affect the program state.. we take care of them in eval_expr

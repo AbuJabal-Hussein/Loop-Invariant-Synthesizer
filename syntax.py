@@ -112,10 +112,16 @@ class PythonParser(object):
                 return self.postprocess(t.subtrees[1])
 
         elif t.root in ['IF_S', 'IF_S2', 'IF_S3', 'IF_S4', 'IF_S5', 'ELIF_S', 'ELIF_S2', 'ELIF_S3', 'ELIF_S4', 'ELIF_S5']:
+            yiuo = '    IF_S -> if E : BLOCK | if E : BLOCK NEWLINE ELSE_S | if E : BLOCK NEWLINE ELIF_S\
+    IF_S2 -> if E : BLOCK2 | if E : BLOCK2 NEWLINE INDENT ELSE_S2 | if E : BLOCK2 NEWLINE INDENT ELIF_S2 '
             if len(t.subtrees) == 4:
                 return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3])])
+            elif len(t.subtrees) == 6:
+                return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3]),
+                                                 self.postprocess(t.subtrees[5])])
             elif len(t.subtrees) == 7:
-                return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3]), self.postprocess(t.subtrees[6])])
+                return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3]),
+                                                 self.postprocess(t.subtrees[6])])
         elif t.root in ['ELSE_S', 'ELSE_S2', 'ELSE_S3', 'ELSE_S4', 'ELSE_S5']:
             return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[2])])
 
