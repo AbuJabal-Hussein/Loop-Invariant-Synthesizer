@@ -1,3 +1,4 @@
+import re
 
 from adt.tree import Tree
 from parsing.earley.earley import Grammar, Parser, ParseTrees
@@ -76,6 +77,7 @@ class PythonParser(object):
         self.grammar = Grammar.from_string(self.GRAMMAR)
 
     def __call__(self, program_text):
+        program_text = self.preprocess(program_text)
         tokens = list(self.tokenizer(program_text))
 
         earley = Parser(grammar=self.grammar, sentence=tokens, debug=False)
@@ -87,6 +89,12 @@ class PythonParser(object):
             return self.postprocess(trees.nodes[0])
         else:
             return None
+
+    def preprocess(self, program_text):
+        # remove comments from the program
+        without_comments = re.sub(r'(#)(.*)', r'', program_text)
+        # remove tabs in empty lines with only tabs
+        return re.sub(r'(\t+)(\n)', r'', without_comments)
 
     def tree_to_list(self, t):
         lst = []
@@ -112,8 +120,6 @@ class PythonParser(object):
                 return self.postprocess(t.subtrees[1])
 
         elif t.root in ['IF_S', 'IF_S2', 'IF_S3', 'IF_S4', 'IF_S5', 'ELIF_S', 'ELIF_S2', 'ELIF_S3', 'ELIF_S4', 'ELIF_S5']:
-            yiuo = '    IF_S -> if E : BLOCK | if E : BLOCK NEWLINE ELSE_S | if E : BLOCK NEWLINE ELIF_S\
-    IF_S2 -> if E : BLOCK2 | if E : BLOCK2 NEWLINE INDENT ELSE_S2 | if E : BLOCK2 NEWLINE INDENT ELIF_S2 '
             if len(t.subtrees) == 4:
                 return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3])])
             elif len(t.subtrees) == 6:
@@ -263,7 +269,6 @@ if __name__ == '__main__':
     # todo: x = a > 0 and b < 3  is being interpreted as x = ((a > 0) and b) < 3 but it should be x = (a > 0) and (b < 3)
 
     # todo: more list function?
-    # todo: add comments support
 
     """
     append
