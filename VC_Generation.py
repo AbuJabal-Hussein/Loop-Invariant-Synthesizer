@@ -15,8 +15,9 @@ OP = {'+': operator.add, '-': operator.sub,
 
 class VCGenerator(object):
 
-    def __init__(self):
+    def __init__(self, vars_dict=dict()):
         self.parser = PythonParser()
+        self.vars_dict = vars_dict
 
     def __call__(self, input_code):
         ast = self.parser(input_code)
@@ -405,7 +406,7 @@ class VCGenerator(object):
                 elif len(t.subtrees) == 2:
                     return And(construct_tr(t.subtrees[0], collected_vars=collected_vars), construct_tr(t.subtrees[1], collected_vars=collected_vars))
 
-            elif t.root in ['=', '+=', '-=', '*=', '/=']:
+            elif t.root in ['=', '+=', '-=', '*=', '/=', '>', '<', '>=', "<="]:
                 return eval_expr(t, collected_vars=collected_vars)
 
             # function call statements does not affect the program, assuming that they don't have side effects on the program variables
@@ -415,7 +416,8 @@ class VCGenerator(object):
 
             return True
 
-        vars_dict = {}
+
+        vars_dict = self.vars_dict.copy()
         tr_lists = [True, [True, True], True]
         tr_lists[0] = construct_tr(ast)
         return tr_lists[0], tr_lists[1][0], tr_lists[1][1], tr_lists[2]

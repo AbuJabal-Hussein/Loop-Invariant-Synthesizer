@@ -12,7 +12,5 @@ class LoopInvSynth(object):
         for line in content.split(sep='\n'):
             print(line)
         tree = ast.parse(source.read())
-        whille_body = tree.body[5]
-        print(tree.body[5].test)
 
 

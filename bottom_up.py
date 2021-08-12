@@ -3,6 +3,7 @@ from parsing.earley.earley import Grammar
 from parsing.silly import SillyLexer, Word
 import itertools
 from copy import deepcopy
+from VC_Generation import *
 
 
 class BottomUp:
@@ -31,7 +32,9 @@ class BottomUp:
         self.program_states_file = prog_states_file  # Where __inv__ prints
         self.program_states = list()  #
         self.arrays_dict = {}  # {Array_name -> {index -> (arr_name, index)} }
+        self.vars_dict = dict()
         self.parse_prog_states()
+        self.vc_gen = VCGenerator(self.vars_dict)
 
     def extract_tokens(self, prog_file):
         tokens = set()
@@ -154,13 +157,32 @@ class BottomUp:
                     pos_converter[i] = (arr2str_name, i_str)
                     i_str += 1
             self.arrays_dict[array_name] = pos_converter
-            return constrains
+            if i_int > i_str:
+                return constrains, IntSort(), array_int
+            return constrains, StringSort(), array_str
+
+        def arr_to_z3_1type(array_name, ds):
+            constrains = []
+            arr_z3sort = None
+            if type(ds[0]) is int:
+                arr_z3sort = IntSort()
+                arr = Array(array_name, IntSort(), arr_z3sort)
+                for i, data in enumerate(ds):
+                    constrains.append(arr[i] == data)
+            else:
+                arr_z3sort = StringSort()
+                arr = Array(array_name, IntSort(), arr_z3sort)
+                for i, data in enumerate(ds):
+                    strval = StringVal(data)
+                    constrains.append(arr[i] == strval)
+
+            return constrains, arr_z3sort, arr
 
         def to_z3type(v_, t_, val):
             if t_ == "int":
-                return Int(v_), int(val)
+                return Int(v_), int(val), IntSort()
             if t_ == "str":
-                return String(v_), val
+                return String(v_), val, StringSort()
 
         with open(self.program_states_file, "r") as source:
             content = source.read()
@@ -171,10 +193,15 @@ class BottomUp:
                 for var_data in line.split(sep='\x1F'):
                     var, t, value = var_data.split(sep=' ', maxsplit=2)
                     if t == 'list':
-                        curr_state_rules = curr_state_rules + assert_array(var, ast.literal_eval(value))
+                        data = ast.literal_eval(value)
+                        cons, z3sort, z3type = arr_to_z3_1type(var, data)
+                        curr_state_rules = curr_state_rules + cons
+                        self.vars_dict[var] = [z3type, z3sort, len(data)]
                     else:
-                        z3type, z3value = to_z3type(var, t, value)
+
+                        z3type, z3value, z3sort = to_z3type(var, t, value)
                         curr_state_rules.append(z3type == z3value)
+                        self.vars_dict[var] = [z3type, z3sort, 1]
                 self.program_states.append(curr_state_rules)
 
     def build_starting_p(self):
@@ -196,6 +223,31 @@ class BottomUp:
                     self.reverse_dict[_type].append(var)
         return p
 
+    def batch_to_z3(self, batch):
+        lst = []
+        for code in batch:
+            inv = None
+            ast = self.vc_gen.parser(code.word)
+            if ast is None or ast.depth < 2:
+                continue
+            try:
+                inv = self.vc_gen.generate_vc(ast)[0]
+            except TypeError as err:
+                if "not supported between instances of " in err.args[0] \
+                        or "unsupported operand type(s) for" in err.args[0]:
+                    continue
+                else:
+                    raise err
+            except z3.z3types.Z3Exception as err:
+                if 'sort mismatch' in err.args[0]:
+                    continue
+                raise err
+            except KeyError as kerr:
+                pass
+            lst.append(inv)
+            # lst.append(self.vc_gen.generate_vc(ast))
+        return lst
+
     def bottom_up(self):
         print("HMMM")
         self.p = self.build_starting_p()
@@ -204,26 +256,28 @@ class BottomUp:
         print("self.reverse_dict:")
         print(self.reverse_dict)
         self.rev_dict = deepcopy(self.reverse_dict)
-        ehhs = dict()
-        ehh = 0
-        while ehh < 5:
+        # ehhs = dict()
+        # ehh = 0
+        while True:
             curr_batch = self.grow()
             print("grow:")
             print(curr_batch)
             # print("self.reverse_dict:")
             # print(self.reverse_dict)
-            # curr_batch = self.elim_equivalents(
-            #     curr_batch)  # probably using z3, since I want to find similar invariants(formulas) not programs
-            # for inv in curr_batch:
-            #     if self.check_sat(inv):
-            #         yield inv
-            ehhs[ehh] = curr_batch.copy()
-            ehh = ehh + 1
-            if len(ehhs.keys()) > 7:
-                yield curr_batch
+
+            # z3_batch = list(self.vc_gen.generate_vc(self.vc_gen.parser(b.word)) for b in curr_batch)
+            z3_batch = self.batch_to_z3(curr_batch)
+            z3_batch = self.elim_equivalents(z3_batch)
+            for inv in z3_batch:
+                if self.check_sat(inv):
+                    yield inv
+            # ehhs[ehh] = curr_batch.copy()
+            # ehh = ehh + 1
+            # if len(ehhs.keys()) > 7:
+            #     yield curr_batch
             self.p = self.p + curr_batch
-        print("THE EHHS:")
-        print(ehhs)
+        # print("THE EHHS:")
+        # print(ehhs)
         # TODO: Add the vars and integers back to self.p
 
 
@@ -248,8 +302,12 @@ print("Tokens:")
 print(bt.tokens)
 print("used_tokens_dict")
 print(bt.used_tokens_dict)
+ois = []
 for bts in bt.bottom_up():
     print(bts)
+    ois.append(bts)
+print("---------------------------------------------------------------------------------------------------------\nois:")
+print(ois)
 
 
 # for state in bt.get_parsed_states():
