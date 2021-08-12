@@ -15,7 +15,9 @@ class PythonParser(object):
              r"(?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse)  (?P<STR1>\'([^\n\r\"\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\\]|\\[rnt\"\'\\])+\") " \
              r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) (?P<INDENT2>(\t\t)) (?P<INDENT>(\t))  =".split()
     GRAMMAR = r"""
-    S   ->   S1 | S1 NEWLINE | S1 NEWLINE INDENT   |   S1 NEWLINE S
+    
+    S   ->   S1 | S1 NEWLINE | S1 NEWLINE INDENT   |  E  |  S1 NEWLINE S
+    
     
     S1  ->   ID = E   | IF_S5 |  IF_S4 | IF_S3 | IF_S2 | IF_S  | WHILE_S5 | WHILE_S4 | WHILE_S3 | WHILE_S2 | WHILE_S  |     ID ASSOP E   |   DEREF = E   |   INV_FUNC | FUNCS
     S1  ->   LPAREN S RPAREN
