@@ -24,9 +24,19 @@ class StatesFile:
 
 
 def __inv__(**kwargs):
+    def get_type(var):
+        if type(var) is str:
+            return "str"
+        if type(var) is int:
+            return "int"
+        if type(var) is list:
+            return "list"
+
     st = ''
     for k, v in kwargs.items():
-        st += (k + ' ' + str(v) + ',')
+        if st is not '':
+            st += '\x1F'
+        st += (k + ' ' + get_type(v) + ' ' + str(v))
     StatesFile.append(st + "\n")
 
 
