@@ -5,15 +5,18 @@ from parsing.earley.earley import Grammar, Parser, ParseTrees
 from parsing.silly import SillyLexer
 
 
-
 class PythonParser(object):
 
     TOKENS = r"(if|else|elif|while)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+)" \
              r" (?P<ASSOP>[+\-*/]=) (?P<MULTDIV>[*/]) (?P<PLUSMINUS>[+\-])  :" \
              r" (?P<RPAREN>\)) (?P<LSPAREN>\[) (?P<RSPAREN>\]) " \
              r" (?P<NOT>not) (?P<FALSE>False) (?P<TRUE>True) " \
-             r"(?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse)  (?P<STR1>\'([^\n\r\"\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\\]|\\[rnt\"\'\\])+\") " \
-             r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) (?P<INDENT2>(\t\t)) (?P<INDENT>(\t))  =".split()
+             r" (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<REMOVE>remove) (?P<MAX>max)" \
+             r" (?P<INDEX>index) (?P<SUBSTRING>substring) " \
+             r" (?P<STR1>\'([^\n\r\"\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\\]|\\[rnt\"\'\\])+\") " \
+             r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) " \
+             r" (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) " \
+             r" (?P<INDENT2>(\t\t)) (?P<INDENT>(\t))  =".split()
     GRAMMAR = r"""
     S   ->   S1 | S1 NEWLINE | S1 NEWLINE INDENT   |   S1 NEWLINE S
     
@@ -53,10 +56,15 @@ class PythonParser(object):
     E   ->   LPAREN E RPAREN | UN_REL E  |    E MULTDIV E   |   E PLUSMINUS E   | E RELOP E
     E   ->   E BI_REL E | LIST_E | DEREF | FUNCS
     E   ->   E0
-    FUNCS -> LEN_FUNC | REVERSE_FUNC
+    FUNCS -> LEN_FUNC | REVERSE_FUNC | APPEND_FUNC | REMOVE_FUNC | MAX_FUNC | INDEX_FUNC | SUBSTRING_FUNC
     LEN_FUNC   -> LEN LPAREN E RPAREN
     INV_FUNC   -> INV LPAREN INV_ARGS RPAREN
     REVERSE_FUNC -> REVERSE CALL
+    APPEND_FUNC -> APPEND CALL
+    REMOVE_FUNC -> REMOVE CALL
+    MAX_FUNC -> MAX CALL
+    INDEX_FUNC -> INDEX CALL
+    SUBSTRING_FUNC -> SUBSTRING MAX
     E0  ->   ID   |   NUM   |   STR   | BOOL
     STR ->   STR1 | STR2
     BOOL -> TRUE | FALSE
@@ -205,7 +213,7 @@ class PythonParser(object):
                 lst = lst if len(args.subtrees) == 1 else lst + self.tree_to_list(args.subtrees[2])
                 return Tree(parent_data, lst)
 
-        elif t.root == 'REVERSE_FUNC':
+        elif t.root in ['REVERSE_FUNC', 'APPEND_FUNC', 'REMOVE_FUNC', 'MAX_FUNC', 'INDEX_FUNC', 'SUBSTRING_FUNC']:
             return self.postprocess(t.subtrees[1], parent_data=t.subtrees[0].subtrees[0].root)
 
         return Tree(t.root, [self.postprocess(s) for s in t.subtrees])
@@ -271,15 +279,19 @@ if __name__ == '__main__':
     # todo: more list function?
 
     """
-    append
+    append - done
     remove
     sort ??
     sum
-    find
-    substring
-    
+    find ==> Exists(jj, arr[jj] == 5)
+    index ==> IndexOf() - done?
+    substring ==> IsSubset(a, b)  ,  SubString()
+    max ==> use max = If(x > y, x, y) - done?
     """
-
+    asd = "sdf"
+    asd.index()
+    zxc = [4,9]
+    zxc.index()
     # ast = PythonParser()("while i < n and n >= 0:\n"
     #                      "\t__inv__(i=i, n=n, x=x, myList=myList)\n"
     #                      "\tx += 1")

@@ -1,7 +1,8 @@
 from syntax import PythonParser, read_source_file
 import operator
 from z3 import Int, ForAll, Implies, Not, And, Or, Solver, unsat, sat, IntSort, Bool, BoolSort, String, StringSort, \
-    Array, IntVector, ArraySort, StringVal, ArithRef, ArrayRef, SeqRef, is_array, BoolRef
+    Array, IntVector, ArraySort, StringVal, ArithRef, ArrayRef, SeqRef, is_array, BoolRef, is_string_value, Length, \
+    is_string, is_int, If, IndexOf, Exists, simplify
 
 OP = {'+': operator.add, '-': operator.sub,
       '*': operator.mul, '/': operator.floordiv,
@@ -62,9 +63,9 @@ class VCGenerator(object):
         def get_expr_type(expr, eval_items):
             if expr.subtrees[0].root == 'ID':
                 item_type = vars_dict[str(eval_items[0]) + '_'][1]
-            elif expr.subtrees[0].root in ['LIST_E', 'reverse']:
+            elif expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
                 item_type = ArraySort(IntSort(), eval_items[0][2])
-            elif isinstance(eval_items[0], int):
+            elif isinstance(eval_items[0], int) or expr.subtrees[0].root == 'len':
                 item_type = IntSort()
             elif isinstance(eval_items[0], bool):
                 item_type = BoolSort()
@@ -100,7 +101,7 @@ class VCGenerator(object):
                 expr2 = expr.subtrees[1]
                 var_name = expr1.subtrees[0].root
                 eval_rhs = eval_expr(expr2, tagged_id=False)
-                if expr2.root == 'NUM' or isinstance(eval_rhs, ArithRef) or expr2.root == 'len' or type(eval_rhs) == int:
+                if expr2.root == 'NUM' or isinstance(eval_rhs, ArithRef) or expr2.root in ['len', 'max'] or type(eval_rhs) is int:
                     vars_dict[var_name] = [Int(var_name), IntSort(), 1]
                     vars_dict[var_name + '_'] = [Int(var_name + '_'), IntSort(), 1]
                 elif expr2.root == 'STR':
@@ -109,7 +110,7 @@ class VCGenerator(object):
                 elif expr2.root == "BOOL" or isinstance(eval_rhs, BoolRef) or type(eval_rhs) == bool:
                     vars_dict[var_name] = [Bool(var_name), BoolSort(), 1]
                     vars_dict[var_name + '_'] = [Bool(var_name + '_'), BoolSort(), 1]
-                elif expr2.root in ['LIST_E', 'reverse']:
+                elif expr2.root in ['LIST_E', 'reverse', 'append', 'remove']:
                     vars_dict[var_name] = [Array(var_name, IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), eval_rhs[3]]
                     vars_dict[var_name + '_'] = [Array(var_name + '_', IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), eval_rhs[3]]
 
@@ -117,10 +118,13 @@ class VCGenerator(object):
                 if not(collected_vars is None):
                     collected_vars.append(OP['=='](eval_lhs, eval_expr(expr1, tagged_id=False)))
 
-                if expr2.root in ['LIST_E', 'reverse']:
+                if expr2.root in ['LIST_E', 'reverse', 'append', 'remove']:
                     return And(OP['=='](eval_lhs, eval_rhs[1]), eval_rhs[0])
                 else:
+                    if type(eval_rhs) is tuple:
+                        return And(eval_rhs[0], OP['=='](eval_lhs, eval_rhs[1]))
                     return OP['=='](eval_lhs, eval_rhs)
+
 
             elif expr.root in ['+=', '-=', '*=', '/=']:
                 expr1 = expr.subtrees[0]
@@ -174,7 +178,7 @@ class VCGenerator(object):
                     arr2 = vars_dict[var_name][0]
                     arr_len = vars_dict[var_name][2]
                     item_type = arr2.range()
-                elif expr.subtrees[0].root in ['LIST_E', 'reverse']:
+                elif expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
                     arr2 = eval_items[0][1]
                     arr_len = eval_items[0][3]
                     item_type = eval_items[0][2]
@@ -184,19 +188,145 @@ class VCGenerator(object):
                     item_type = IntSort()
 
                 arr = Array(next(gen_var), IntSort(), item_type)
-                if expr.subtrees[0].root not in ['LIST_E', 'reverse']:
+                if expr.subtrees[0].root not in ['LIST_E', 'reverse', 'append', 'remove']:
                     arr_value = And([arr[i] == arr2[arr_len - i - 1] for i in range(arr_len)])
                 else:
-                    arr_value = And(eval_items[0][0], And([arr[i] == arr2[arr_len - i - 1] for i in range(arr_len)]))
+                    arr_value = And([eval_items[0][0]] + [arr[i] == arr2[arr_len - i - 1] for i in range(arr_len)])
 
                 return arr_value, arr, item_type, arr_len
 
             elif expr.root == 'len':
-                len_var = Int(next(gen_var))
                 lst_eval = (eval_expr(expr.subtrees[0]))
                 if isinstance(lst_eval, list):
                     return lst_eval[3]
+                elif is_string(lst_eval):
+                    return Length(lst_eval)
+
                 return vars_dict[str(lst_eval)][2]
+
+            elif expr.root == 'append':
+                if len(expr.subtrees) == 0:
+                    arr = IntVector(next(gen_var), 0)
+                    return True, arr, IntSort(), 0
+
+                # ideally, there should be two subtree.. and it should be a concrete list or a list variable and an item
+                eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
+                # eval first argument: list
+                if expr.subtrees[0].root == 'ID':
+                    var_name = expr.subtrees[0].subtrees[0].root
+                    arr2 = vars_dict[var_name][0]
+                    arr_len = vars_dict[var_name][2]
+                    item_type = arr2.range()
+                elif expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                    arr2 = eval_items[0][1]
+                    arr_len = eval_items[0][3]
+                    item_type = eval_items[0][2]
+                else:
+                    arr2 = IntVector(next(gen_var), 0)
+                    arr_len = 0
+                    item_type = IntSort()
+
+                # eval second argument: inserted_item
+                if expr.subtrees[1].root == 'ID':
+                    var_name = expr.subtrees[1].subtrees[0].root
+                    inserted_item = vars_dict[var_name][0]
+                elif expr.subtrees[1].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                    inserted_item = eval_items[1][1]
+                else:
+                    inserted_item = eval_items[1]
+
+                arr = Array(next(gen_var), IntSort(), item_type)
+
+                if expr.subtrees[0].root not in ['LIST_E', 'reverse', 'append', 'remove']:
+                    arr_value = And([arr[arr_len] == inserted_item] + [arr[i] == arr2[i] for i in range(arr_len)])
+                else:
+                    arr_value = And([eval_items[0][0], arr[arr_len] == inserted_item] + [arr[i] == arr2[i] for i in range(arr_len)])
+
+                return arr_value, arr, item_type, arr_len+1
+
+            elif expr.root == 'remove':
+                if len(expr.subtrees) == 0:
+                    arr = IntVector(next(gen_var), 0)
+                    return True, arr, IntSort(), 0
+
+                # ideally, there should be two subtree.. and it should be a concrete list or a list variable and an item
+                eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
+                # eval first argument: list
+                if expr.subtrees[0].root == 'ID':
+                    var_name = expr.subtrees[0].subtrees[0].root
+                    arr2 = vars_dict[var_name][0]
+                    arr_len = vars_dict[var_name][2]
+                    item_type = arr2.range()
+                elif expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                    arr2 = eval_items[0][1]
+                    arr_len = eval_items[0][3]
+                    item_type = eval_items[0][2]
+                else:
+                    arr2 = IntVector(next(gen_var), 0)
+                    arr_len = 0
+                    item_type = IntSort()
+
+                # eval second argument: removed_item
+                if expr.subtrees[1].root == 'ID':
+                    var_name = expr.subtrees[1].subtrees[0].root
+                    removed_item = vars_dict[var_name][0]
+                elif expr.subtrees[1].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                    removed_item = eval_items[1][1]
+                else:
+                    removed_item = eval_items[1]
+
+                arr = Array(next(gen_var), IntSort(), item_type)
+                # todo: edit this shit
+                if expr.subtrees[0].root not in ['LIST_E', 'reverse', 'append', 'remove']:
+                    arr_value = And([arr[arr_len] == removed_item] + [arr[i] == arr2[i] for i in range(arr_len)])
+                else:
+                    arr_value = And([eval_items[0][0], arr[arr_len] == removed_item] + [arr[i] == arr2[i] for i in range(arr_len)])
+
+                return arr_value, arr, item_type, arr_len+1
+
+            elif expr.root == 'max':
+                if len(expr.subtrees) == 0:
+                    return 0
+
+                # ideally, there should be two subtree.. containing two integers
+                eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
+                if len(eval_items) == 1:
+                    if is_array(eval_items[0]) or expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                        jj = Int(next(gen_var))
+                        index = Int(next(gen_var))
+                        max_item = Int(next(gen_var))
+                        arr = eval_items[0][1] if expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove'] else eval_items[0]
+                        max_vc = And(Exists(index, arr[index] == max_item), ForAll(jj, max_item >= arr[jj]))
+                        if expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                            max_vc = And(eval_items[0][0], max_vc)
+                        return max_vc, max_item
+                    return eval_items[0]
+
+                if (is_int(eval_items[0]) or isinstance(eval_items[0], int)) and (is_int(eval_items[1]) or isinstance(eval_items[1], int)):
+                    return simplify(If(eval_items[0] >= eval_items[1], eval_items[0], eval_items[1]))
+                return eval_items[0]
+
+            elif expr.root == 'index':
+                if len(expr.subtrees) <= 1:
+                    return -1
+
+                # ideally, there should be two subtree.. and it should be a concrete list or a list variable and an item
+                eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
+                if expr.subtrees[0].root == 'LIST_E' or expr.subtrees[0].root == 'ID' and is_array(eval_items[0]):
+                    jj = Int(next(gen_var))
+                    elem_index = Int(next(gen_var))
+                    arr = eval_items[0][1] if expr.subtrees[0].root == 'LIST_E' else eval_items[0]
+                    find_elem = Exists(jj, And(arr[jj] == eval_items[1], elem_index == jj))
+                    if expr.subtrees[0].root == 'LIST_E':
+                        find_elem = And(eval_items[0][0], find_elem)
+                    return find_elem, elem_index
+
+                elif is_string(eval_items[0]):
+                    if not is_string(eval_items[1]):
+                        return -1
+                    return IndexOf(eval_items[0], eval_items[1])
+
+                return -1
 
             return True
 
@@ -249,7 +379,7 @@ class VCGenerator(object):
 
             # function call statements does not affect the program, assuming that they don't have side effects on the program variables
             # function expressions do affect the program state.. we take care of them in eval_expr
-            elif t.root in ['INV_FUNC', 'reverse', 'len']:
+            elif t.root in ['INV_FUNC', 'reverse', 'len', 'append', 'remove']:
                 return True
 
             return True
