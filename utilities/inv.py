@@ -6,21 +6,25 @@ st_file = None
 class StatesFile:
 
     @staticmethod
-    def open():
+    def open(file):
+        print("------------Trying to open------------")
         global st_file
-        if os.path.exists("programStates.txt"):
-            os.remove("programStates.txt")
-        st_file = open("programStates.txt", "a+")
+        if os.path.exists(file):
+            os.remove(file)
+        st_file = open(file, "a+")
+        print("------------Opened------------")
 
     @staticmethod
     def append(txt):
+        global st_file
         st_file.write(txt)
+        print("------------appended------------")
 
     @staticmethod
-    def close():
+    def close(file):
         st_file.close()
-        if os.path.exists("programStates.txt"):
-            os.remove("programStates.txt")
+        # if os.path.exists(file):
+        #     os.remove(file)
 
 
 def __inv__(**kwargs):
@@ -40,4 +44,7 @@ def __inv__(**kwargs):
     StatesFile.append(st + "\n")
 
 
-
+def append(lst, x):
+    mylist = lst[:]
+    mylist.append(x)
+    return mylist

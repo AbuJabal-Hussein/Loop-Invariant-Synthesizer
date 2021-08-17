@@ -108,7 +108,7 @@ class CollectVisitor(RichTreeWalk.Visitor):
 
 
 if __name__ == '__main__':
-    from adt.tree.build import TreeAssistant
+    from lib.adt.tree.build import TreeAssistant
     
     inputs = [(1, [(2, [3, 4, 5]), (6, [(7, [8]), 9])])]
     

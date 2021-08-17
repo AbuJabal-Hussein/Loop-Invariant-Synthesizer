@@ -102,8 +102,9 @@ class PythonParser(object):
             return None
 
     def preprocess(self, program_text):
+        without_from = re.sub(r'(from)(.*)', r'', program_text)
         # remove comments from the program
-        without_comments = re.sub(r'(#)(.*)', r'', program_text)
+        without_comments = re.sub(r'(#)(.*)', r'', without_from)
         # remove tabs in empty lines with only tabs
         return re.sub(r'(\t+)(\n)', r'', without_comments).lstrip()
 

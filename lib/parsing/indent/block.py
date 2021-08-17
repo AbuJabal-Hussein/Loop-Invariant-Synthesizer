@@ -1,9 +1,9 @@
 # encoding=utf-8
 
-from adt.tree import Tree
+from lib.adt.tree import Tree
 from pattern.collection.basics import Cabinet, ListWithAdd
 from pattern.mixins.attributes import WithMixIn
-from adt.tree.transform.apply import ApplyTo
+from lib.adt.tree.transform.apply import ApplyTo
 
 
 

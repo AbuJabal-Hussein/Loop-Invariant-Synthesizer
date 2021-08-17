@@ -180,7 +180,7 @@ class ConditionalPattern(TreePattern):
 
 # Snippet
 if __name__ == '__main__':
-    from adt.tree.build import TreeAssistant as TA
+    from lib.adt.tree.build import TreeAssistant as TA
     pat = TA.build(('a', [('?', ['$1...']), ('c', ['$', '$2...'])]))
     txt = TA.build(('a', ['b', ('c', [('d', ['e', 'f']), 'k','j'])]))
     print("pattern:", pat)

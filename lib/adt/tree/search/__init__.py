@@ -1,6 +1,6 @@
 
-from adt.tree.walk import RichTreeWalk
-from adt.tree.paths import Path 
+from lib.adt.tree.walk import RichTreeWalk
+from lib.adt.tree.paths import Path
 
 
 class ScanFor(object):
@@ -38,7 +38,7 @@ class ScanFor(object):
         
         
 if __name__ == '__main__':
-    from adt.tree.build import TreeAssistant
+    from lib.adt.tree.build import TreeAssistant
     
     t = TreeAssistant.build((1, [2,3]))
     print(ScanFor(lambda x: x%2, applies_to=ScanFor.VALUE)(t))
