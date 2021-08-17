@@ -27,3 +27,4 @@ if __name__ == '__main__':
     # print('PyCharm')
     input_code = read_source_file("benchmarks/test_append.py")
     VCGenerator()(input_code)
+
