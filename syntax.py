@@ -5,6 +5,7 @@ from lib.parsing.earley.earley import Grammar, Parser, ParseTrees
 from lib.parsing.silly import SillyLexer
 
 
+
 class PythonParser(object):
 
     TOKENS = r"(if|else|elif|while)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+)" \
