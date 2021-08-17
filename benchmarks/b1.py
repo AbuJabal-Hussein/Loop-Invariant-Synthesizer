@@ -1,6 +1,7 @@
 lst = [5,8]
 n = len(lst)
 a1 = lst[1]
+a = 8
 x = 3
 y = 6
 y += 9

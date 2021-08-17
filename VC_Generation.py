@@ -69,11 +69,14 @@ class VCGenerator(object):
                 item_type = IntSort()
             elif isinstance(eval_items[0], bool):
                 item_type = BoolSort()
-            elif isinstance(eval_items[0], str):
+            elif is_string(eval_items[0]):
                 item_type = StringSort()
             else:
                 item_type = IntSort()
             return item_type
+
+        def expr_is_int(expr, expr_eval):
+            return is_int(expr_eval) or isinstance(expr_eval, int) or expr.root in ['len', 'max', 'index']
 
         def eval_expr(expr, tagged_id=False, collected_vars=None):
             if expr.root == 'ID':
@@ -101,7 +104,7 @@ class VCGenerator(object):
                 expr2 = expr.subtrees[1]
                 var_name = expr1.subtrees[0].root
                 eval_rhs = eval_expr(expr2, tagged_id=False)
-                if expr2.root == 'NUM' or isinstance(eval_rhs, ArithRef) or expr2.root in ['len', 'max'] or type(eval_rhs) is int:
+                if expr2.root == 'NUM' or isinstance(eval_rhs, ArithRef) or expr2.root in ['len', 'max', 'index'] or type(eval_rhs) is int:
                     vars_dict[var_name] = [Int(var_name), IntSort(), 1]
                     vars_dict[var_name + '_'] = [Int(var_name + '_'), IntSort(), 1]
                 elif expr2.root == 'STR':
@@ -125,7 +128,6 @@ class VCGenerator(object):
                         return And(eval_rhs[0], OP['=='](eval_lhs, eval_rhs[1]))
                     return OP['=='](eval_lhs, eval_rhs)
 
-
             elif expr.root in ['+=', '-=', '*=', '/=']:
                 expr1 = expr.subtrees[0]
                 expr2 = expr.subtrees[1]
@@ -133,7 +135,15 @@ class VCGenerator(object):
                 eval_rhs = eval_expr(expr2, tagged_id=False)
                 if collected_vars is not None:
                     collected_vars.append(OP['=='](eval_lhs, eval_expr(expr1, tagged_id=False)))
-                return OP['=='](eval_lhs, OP[expr.root[0]](eval_lhs, eval_rhs))
+                item_rhs = eval_rhs
+                items_vc = None
+                if type(item_rhs) is tuple:
+                    item_rhs = eval_rhs[1]
+                    items_vc = eval_rhs[0]
+                assign_vc = OP['=='](eval_lhs, OP[expr.root[0]](eval_lhs, item_rhs))
+                if items_vc is not None:
+                    assign_vc = And(items_vc, assign_vc)
+                return assign_vc
 
             elif expr.root == 'DEREF':  # if this doesnt work, try operator.getitem and operator.setitem
                 lst_id = expr.subtrees[0]
@@ -302,8 +312,22 @@ class VCGenerator(object):
                         return max_vc, max_item
                     return eval_items[0]
 
-                if (is_int(eval_items[0]) or isinstance(eval_items[0], int)) and (is_int(eval_items[1]) or isinstance(eval_items[1], int)):
-                    return simplify(If(eval_items[0] >= eval_items[1], eval_items[0], eval_items[1]))
+                if expr_is_int(expr.subtrees[0], eval_items[0]) and expr_is_int(expr.subtrees[1], eval_items[1]):
+                    item1 = eval_items[0]
+                    item2 = eval_items[1]
+                    items_vc = None
+                    if type(item1) is tuple:
+                        item1 = eval_items[0][1]
+                        items_vc = eval_items[0][0]
+                    if type(item2) is tuple:
+                        item2 = eval_items[1][1]
+                        items_vc = And(items_vc, eval_items[1][0])
+
+                    max_vc = simplify(If(item1 >= item2, item1, item2))
+                    if items_vc is not None:
+                        return items_vc, max_vc
+
+                    return max_vc
                 return eval_items[0]
 
             elif expr.root == 'index':
@@ -316,15 +340,22 @@ class VCGenerator(object):
                     jj = Int(next(gen_var))
                     elem_index = Int(next(gen_var))
                     arr = eval_items[0][1] if expr.subtrees[0].root == 'LIST_E' else eval_items[0]
-                    find_elem = Exists(jj, And(arr[jj] == eval_items[1], elem_index == jj))
+                    item = eval_items[1]
+                    item_vc = None
+                    if type(eval_items[1]) is tuple:
+                        item = eval_items[1][1]
+                        item_vc = eval_items[1][0]
+                    find_elem = Exists(jj, And(arr[jj] == item, elem_index == jj))
                     if expr.subtrees[0].root == 'LIST_E':
                         find_elem = And(eval_items[0][0], find_elem)
+                    if item_vc is not None:
+                        find_elem = And(item_vc, find_elem)
                     return find_elem, elem_index
 
                 elif is_string(eval_items[0]):
                     if not is_string(eval_items[1]):
                         return -1
-                    return IndexOf(eval_items[0], eval_items[1])
+                    return simplify(IndexOf(eval_items[0], eval_items[1], 0))
 
                 return -1
 

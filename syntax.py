@@ -13,7 +13,7 @@ class PythonParser(object):
              r" (?P<NOT>not) (?P<FALSE>False) (?P<TRUE>True) " \
              r" (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<REMOVE>remove) (?P<MAX>max)" \
              r" (?P<INDEX>index) (?P<SUBSTRING>substring) " \
-             r" (?P<STR1>\'([^\n\r\"\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\\]|\\[rnt\"\'\\])+\") " \
+             r" (?P<STR1>\'([^\n\r\"\'\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\'\\]|\\[rnt\"\'\\])+\") " \
              r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) " \
              r" (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) " \
              r" (?P<INDENT2>(\t\t)) (?P<INDENT>(\t))  =".split()
@@ -102,7 +102,7 @@ class PythonParser(object):
         # remove comments from the program
         without_comments = re.sub(r'(#)(.*)', r'', program_text)
         # remove tabs in empty lines with only tabs
-        return re.sub(r'(\t+)(\n)', r'', without_comments)
+        return re.sub(r'(\t+)(\n)', r'', without_comments).lstrip()
 
     def tree_to_list(self, t):
         lst = []
@@ -224,7 +224,7 @@ def read_source_file(path):
     src = src_file.read()
     src_file.close()
     # print(src)
-    return src.lstrip()
+    return src
 
 
 
@@ -284,14 +284,11 @@ if __name__ == '__main__':
     sort ??
     sum
     find ==> Exists(jj, arr[jj] == 5)
-    index ==> IndexOf() - done?
+    index ==> IndexOf() - done
     substring ==> IsSubset(a, b)  ,  SubString()
-    max ==> use max = If(x > y, x, y) - done?
+    max ==> use max = If(x > y, x, y) - done
     """
-    asd = "sdf"
-    asd.index()
-    zxc = [4,9]
-    zxc.index()
+
     # ast = PythonParser()("while i < n and n >= 0:\n"
     #                      "\t__inv__(i=i, n=n, x=x, myList=myList)\n"
     #                      "\tx += 1")
