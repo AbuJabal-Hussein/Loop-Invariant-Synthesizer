@@ -2,7 +2,7 @@
 # coding=utf-8
 # -*- encoding: utf-8 -*-
 
-from adt.tree import Tree
+from lib.adt.tree import Tree
 
 
 

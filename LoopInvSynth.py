@@ -12,5 +12,3 @@ class LoopInvSynth(object):
         for line in content.split(sep='\n'):
             print(line)
         tree = ast.parse(source.read())
-
-

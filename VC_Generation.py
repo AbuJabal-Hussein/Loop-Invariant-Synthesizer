@@ -14,9 +14,11 @@ OP = {'+': operator.add, '-': operator.sub,
 
 class VCGenerator(object):
 
-    def __init__(self, vars_dict=dict()):
+    def __init__(self, vars_dict=dict(), vars_noz3=dict(), should_tag=True):
         self.parser = PythonParser()
         self.vars_dict = vars_dict
+        self.vars_noz3 = vars_noz3
+        self.should_tag = should_tag
 
     def __call__(self, input_code):
         ast = self.parser(input_code)
@@ -33,6 +35,7 @@ class VCGenerator(object):
         print(loop_cond)
         print(loop_body)
         print(post_loop)
+        return pre_loop, loop_cond, loop_body, post_loop
 
     # def break_down_loop(self, ast):
     #     def find_loop_node_parent(t):
@@ -76,10 +79,13 @@ class VCGenerator(object):
             return item_type
 
         def eval_expr(expr, tagged_id=False, collected_vars=None):
+            tagged_id = self.should_tag if not self.should_tag else tagged_id
             if expr.root == 'ID':
                 var_name = expr.subtrees[0].root
                 var_name = var_name if not tagged_id else var_name + '_'
-                return vars_dict[var_name][0]
+                if var_name in vars_dict:
+                    return vars_dict[var_name][0]
+                return self.vars_noz3[var_name][0](var_name)
 
             elif expr.root in ['NUM', 'BOOL']:
                 return expr.subtrees[0].root

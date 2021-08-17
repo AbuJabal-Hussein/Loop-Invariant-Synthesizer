@@ -1,9 +1,50 @@
 from z3 import *
-from parsing.earley.earley import Grammar
-from parsing.silly import SillyLexer, Word
+
+from adt.tree import Tree
+from lib.parsing.earley.earley import Grammar
+from lib.adt.tree.walk import PreorderWalk
+from lib.parsing.silly import SillyLexer, Word
 import itertools
 from copy import deepcopy
 from VC_Generation import *
+import multiprocessing
+from time import time
+
+
+
+def check_passing(generator, ast_chunks, x_):  # TODO: Rename
+    res = []
+    s_ = Solver()
+    x_ast = generator.parser(x_)
+    x = generator.generate_vc(x_ast)[0]
+    for y_ in ast_chunks:
+        s_.reset()
+        ast = generator.parser(y_)
+        y = generator.generate_vc(ast)[0]
+        s_.add(Not(x == y))
+        if s_.check() == unsat:  # proved to be equal
+            continue
+        res.append(y_)
+
+    return res
+
+
+def remove_equal(x, ys, z3_to_str):
+    """
+
+    :param x: what to compare to
+    :param ys: List[(index, z3 object)]
+    :return:
+    """
+    adder = []
+    for i, y in ys:
+        s_ = Solver()
+        s_.add(Not(x == y))
+        if s_.check() == unsat:  # proved to be equal
+            continue
+        adder.append(z3_to_str[y])
+    # print(multiprocessing.current_process().ident)
+    return adder
 
 
 class BottomUp:
@@ -16,6 +57,7 @@ class BottomUp:
         :param tokens: The Grammar's tokens
         """
         self.rev_dict = dict()
+        self.strings = []
         self.grammar = Grammar.from_string(grammar)
         self.tokenizer = SillyLexer(tokens)
         print(self.grammar)
@@ -33,8 +75,11 @@ class BottomUp:
         self.program_states = list()  #
         self.arrays_dict = {}  # {Array_name -> {index -> (arr_name, index)} }
         self.vars_dict = dict()
+        self.vars_dict_multi = dict()
+        self.tagged_vars = dict()
         self.parse_prog_states()
-        self.vc_gen = VCGenerator(self.vars_dict)
+        self.vc_gen = VCGenerator(self.vars_dict, should_tag=False)
+        self.z3_to_str = dict()
 
     def extract_tokens(self, prog_file):
         tokens = set()
@@ -65,6 +110,10 @@ class BottomUp:
             return "".join(as_list[:index]) + var + "".join(as_list[index:])
         batch = list()
         local_rev_dic = deepcopy(self.reverse_dict)
+        # print("In Grow:")
+        # print("    self.reverse_dict: {}".format(self.reverse_dict))
+        # print("    self.rev_dict: {}".format(self.rev_dict))
+        # print("    self.p: {}".format(self.p))
         for key in self.reverse_dict.keys():
             local_rev_dic[key].extend(self.rev_dict.setdefault(key, []))
         for key in self.used_tokens_dict.keys():
@@ -94,7 +143,8 @@ class BottomUp:
                                     batch.append(new_form)
                                     self.reverse_dict.setdefault(lhs, []).append(new_form.word)
 
-                self.reverse_dict[tag].remove(current_form.word)
+                if current_form.word in self.reverse_dict[tag]:
+                    self.reverse_dict[tag].remove(current_form.word)
                 local_rev_dic[tag].remove(current_form.word)
             self.p.remove(current_form)
 
@@ -110,12 +160,86 @@ class BottomUp:
         """
         s_ = Solver()
         for i, x in enumerate(batch):
-            for y in batch[i+1:]:
+            to_remove = []
+            for j in range(i+1, len(batch)):
+                y = batch[j]
+            # for y in batch[i+1:]:
                 s_.add(Not(x == y))
                 if s_.check() == unsat:  # proved to be equal
-                    batch.remove(y)
+                    to_remove.append(y)
                 s_.reset()
+            for r in to_remove:
+                batch.remove(r)
+            print("Finished %d" % i)
         return batch
+
+    @staticmethod
+    def elim_equivalents_multi_proccess(batch: list, generator, vars_dict):
+        started = time()
+        total_size = len(batch)
+        def chunkIt(seq, split):
+            avg = len(seq) / float(split)
+            out = []
+            last = 0.0
+
+            while last < len(seq):
+                out.append(seq[int(last):int(last + avg)])
+                last += avg
+
+            return out
+
+        with open("timers.txt", "a") as profiler:
+            profiler.write("\n\n------------------Starting new Elim-------------------------\n")
+            ready = []
+            num = min(multiprocessing.cpu_count() - 1, 8)
+            print("num CPUS: %d" % num)
+            while len(batch) > 1:
+                start_while = time()
+                # x = deepcopy(batch[0]).translate(ctx)
+                pool = multiprocessing.Pool(processes=num)
+                # processes = []
+                # should_remove = dict()
+                # for j in range(1, len(batch)):
+                #     y = batch[j]
+                #     should_remove[j] = pool.apply_async(remove_equal, [x, y, lambda d_: batched.append(d_)]).get()
+                chunks = chunkIt(batch, num)
+                x = batch[0]
+                async_results = []
+                for chunk in chunks:
+                    # proc = multiprocessing.Process(target=remove_equal, args=[x, chunk, lambda d_: batched.append(d_)])
+                    # proc.start()
+                    # processes.append(proc)
+                    # res = pool.apply_async(remove_equal, [x, chunk, z3_to_str])
+                    res = pool.apply_async(check_passing, [VCGenerator(vars_noz3=vars_dict, should_tag=False), chunk, x])
+                    async_results.append(res)
+
+                pool.close()
+                pool.join()
+                x_ast = generator.parser(x)
+                # print(x)
+                ready.append(generator.generate_vc(x_ast)[0])
+                batched = []
+                for async_res in async_results:
+                    results = async_res.get()
+                    for res in results:
+                        batched.append(res)
+
+                pool = multiprocessing.Pool(num)
+                # for proc in processes:
+                #     proc.join()
+                batch = batched
+                print("Finished %d" % len(ready))
+                now = time()
+                profiler.write("{} started at: {} ended at {}  Total: {}\n".format(len(ready), start_while, now,
+                                                                                 now-start_while))
+
+            if len(batch) == 1:
+                b = generator.parser(batch[0])
+                ready.append(generator.generate_vc(b)[0])
+            now = time()
+            profiler.write("\n\neliminate finished at: {}  Total time: {}\n".format(now, now - started))
+
+        return ready
 
     def check_sat(self, inv):
         for state in self.program_states:
@@ -180,9 +304,9 @@ class BottomUp:
 
         def to_z3type(v_, t_, val):
             if t_ == "int":
-                return Int(v_), int(val), IntSort()
+                return Int(v_), int(val), IntSort(), Int
             if t_ == "str":
-                return String(v_), val, StringSort()
+                return String(v_), val, StringSort(), String
 
         with open(self.program_states_file, "r") as source:
             content = source.read()
@@ -197,11 +321,13 @@ class BottomUp:
                         cons, z3sort, z3type = arr_to_z3_1type(var, data)
                         curr_state_rules = curr_state_rules + cons
                         self.vars_dict[var] = [z3type, z3sort, len(data)]
+                        self.vars_dict_multi[var] = ["array", True, len(data)]
                     else:
 
-                        z3type, z3value, z3sort = to_z3type(var, t, value)
+                        z3type, z3value, z3sort, builder = to_z3type(var, t, value)
                         curr_state_rules.append(z3type == z3value)
                         self.vars_dict[var] = [z3type, z3sort, 1]
+                        self.vars_dict_multi[var] = [builder, True, 1]
                 self.program_states.append(curr_state_rules)
 
     def build_starting_p(self):
@@ -223,11 +349,38 @@ class BottomUp:
                     self.reverse_dict[_type].append(var)
         return p
 
+    def tag_and_convert(self, inv):
+        inv_str = self.z3_to_str[inv]
+        ast = deepcopy(self.vc_gen.parser(inv_str))
+        adding = dict()
+        for node in PreorderWalk(ast):
+            if node.root == 'ID':
+                var = node.subtrees[0].root
+                if var in self.vars_dict:
+                    lst = self.vars_dict[var]
+                    if lst[2] > 1 or var.endswith("_"):  # A list
+                        continue
+                    tagged = var + "_"
+                    node.subtrees[0] = Tree(tagged)
+                    if tagged not in self.vars_dict.keys():
+                        adding[tagged] = [Int(tagged) if self.vars_dict[var][0].is_int()
+                                          else String(tagged), lst[1], lst[2]]
+        for k, elem in adding.items():
+            self.vars_dict[k] = elem
+            self.tagged_vars[k] = elem
+        return self.vc_gen.generate_vc(ast)[0]
+
     def batch_to_z3(self, batch):
+        self.strings = []
         lst = []
+        print("in converting, self.vars_dict {}".format(self.vars_dict))
         for code in batch:
+            if type(code) is not str:
+                word = code.word
+            else:
+                word = code
             inv = None
-            ast = self.vc_gen.parser(code.word)
+            ast = self.vc_gen.parser(word)
             if ast is None or ast.depth < 2:
                 continue
             try:
@@ -243,79 +396,124 @@ class BottomUp:
                     continue
                 raise err
             except KeyError as kerr:
-                pass
+                continue
+            if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
+                continue
+            t = simplify(inv)
+            print("str: {} ast: {} Inv: {} simplified: {}".format(word, ast, inv, t))
+            if type(t) == BoolRef and (t == True or t == False):  # simply equal to True (e.g. y<=y)
+                continue
+            self.z3_to_str[inv] = word
             lst.append(inv)
+            self.strings.append(word)
             # lst.append(self.vc_gen.generate_vc(ast))
         return lst
 
+    # def inv_tagged(self, inv):
+    #     inv_str = self.z3_to_str[inv]
+    #     adding = dict()
+    #     for var, l in self.vars_dict.items():
+    #         if l[2] > 1 or var.endswith("_"):  # A list
+    #             continue
+    #         tagged = var + "_"
+    #         if var in inv_str and tagged not in self.vars_dict.keys():
+    #             adding[tagged] = [Int(tagged) if self.vars_dict[var][0].is_int() else String(tagged), l[1], l[2]]
+    #         inv_str = inv_str.replace(var, tagged)
+    #     for k, elem in adding.items():
+    #         self.vars_dict[k] = elem
+    #     self.tagged_vars = adding
+    #     return inv_str
+
     def bottom_up(self):
-        print("HMMM")
+        # print("HMMM")
         self.p = self.build_starting_p()
-        print("before Grow:")
-        print(self.p)
-        print("self.reverse_dict:")
-        print(self.reverse_dict)
+        # print("before Grow:")
+        # print(self.p)
+        # print("self.reverse_dict:")
+        # print(self.reverse_dict)
+        starting = deepcopy(self.p)
         self.rev_dict = deepcopy(self.reverse_dict)
         # ehhs = dict()
+        i = 0
         # ehh = 0
         while True:
+            i = i + 1
+            self.z3_to_str = dict()
             curr_batch = self.grow()
-            print("grow:")
-            print(curr_batch)
+            # print("grow:")
+            # print(curr_batch)
             # print("self.reverse_dict:")
             # print(self.reverse_dict)
-
+            print("-------------------%d-----------------" % i)
+            print("Batch size: %d" % len(curr_batch))
             # z3_batch = list(self.vc_gen.generate_vc(self.vc_gen.parser(b.word)) for b in curr_batch)
             z3_batch = self.batch_to_z3(curr_batch)
-            z3_batch = self.elim_equivalents(z3_batch)
+            print("converted %d:" % len(z3_batch))
+            print(z3_batch)
+            z3_batch = self.elim_equivalents_multi_proccess(self.strings, self.vc_gen, self.vars_dict_multi)
+            print("Eliminated\nNew Size: %d" % len(z3_batch))
+            sats = []
             for inv in z3_batch:
                 if self.check_sat(inv):
-                    yield inv
+                    inv_tagged = self.tag_and_convert(inv)
+                    # inv_tagged = self.batch_to_z3([self.inv_tagged(inv)])[0]
+                    print("Inv {} and Tagged {}".format(inv, inv_tagged))
+                    sats.append((inv, inv_tagged))
+            for tagged in self.tagged_vars:
+                del self.vars_dict[tagged]
+            print("after delete of self.vars_dict {}\n self.tagged_vars: {}".format(self.vars_dict, self.tagged_vars))
+            self.tagged_vars.clear()
+            yield sats
+            print("Yielded")
             # ehhs[ehh] = curr_batch.copy()
             # ehh = ehh + 1
             # if len(ehhs.keys()) > 7:
             #     yield curr_batch
-            self.p = self.p + curr_batch
+            for word in curr_batch:
+                if word.word in self.z3_to_str.values():
+                    self.p.append(word)
+            self.p.extend(deepcopy(starting))
+            print("self.p: {}".format(self.p))
         # print("THE EHHS:")
         # print(ehhs)
-        # TODO: Add the vars and integers back to self.p
 
 
-s = Solver()
-ind = Int("i")
-s.add(And(ind >= 0, ind < 4))
-TOKENS = r"(if|then|else|while|do|skip)(?![\w\d_])   (?P<id>[^\W\d]\w*)   (?P<num>[+\-]?\d+)  " \
-         r" (?P<op>[!<>]=|([+\-*/<>])|==)    [();]  =".split()
-GRAMMAR = r"""
-S   ->   S1     |   S1 ; S
-S1  ->   skip   |   id = E   |   if E then S else S1   |   while E do S1
-S1  ->   ( S )
-E   ->   E0   |   E0 op E0 
-E0  ->   id   |   num
-E0  ->   ( E )
-VAR -> x | y | z | i | w | n | myList
-"""
-bt = BottomUp(grammar=GRAMMAR, prog_states_file="programStates.txt", tokens=TOKENS, prog_file="TestInv.py")
-print("Vars:")
-print(bt.p)
-print("Tokens:")
-print(bt.tokens)
-print("used_tokens_dict")
-print(bt.used_tokens_dict)
-ois = []
-for bts in bt.bottom_up():
-    print(bts)
-    ois.append(bts)
-print("---------------------------------------------------------------------------------------------------------\nois:")
-print(ois)
+if __name__ == '__main__':
+    s = Solver()
+    ind = Int("i")
+    s.add(And(ind >= 0, ind < 4))
+    TOKENS = r"(if|then|else|while|do|skip)(?![\w\d_])   (?P<id>[^\W\d]\w*)   (?P<num>[+\-]?\d+)  " \
+             r" (?P<op>[!<>]=|([+\-*/<>])|==)    [();]  =".split()
+    GRAMMAR = r"""
+    S   ->   S1     |   S1 ; S
+    S1  ->   skip   |   id = E   |   if E then S else S1   |   while E do S1
+    S1  ->   ( S )
+    E   ->   E0   |   E0 op E0 
+    E0  ->   id   |   num
+    E0  ->   ( E )
+    VAR -> x | y | z | i | w | n | myList
+    """
+    bt = BottomUp(grammar=GRAMMAR, prog_states_file="programStates.txt", tokens=TOKENS, prog_file="TestInv.py")
+    print("Vars:")
+    print(bt.p)
+    print("Tokens:")
+    print(bt.tokens)
+    print("used_tokens_dict")
+    print(bt.used_tokens_dict)
+    ois = []
+    for bts in bt.bottom_up():
+        # print(bts)
+        ois.append(bts)
+    print("---------------------------------------------------------------------------------------------------------\nois:")
+    print(ois)
+    # TODO: I' (the invariant with renaming each v to v')
 
-
-# for state in bt.get_parsed_states():
-#     s.add(state)
-#     print("---------------------------------------------------------------------")
-#     print(s)
-#     print(s.check())
-#     print(s.model())
-#     s.reset()
-#     s.add(And(I >= 0, I < 4))
-#     print("---------------------------------------------------------------------")
+    # for state in bt.get_parsed_states():
+    #     s.add(state)
+    #     print("---------------------------------------------------------------------")
+    #     print(s)
+    #     print(s.check())
+    #     print(s.model())
+    #     s.reset()
+    #     s.add(And(I >= 0, I < 4))
+    #     print("---------------------------------------------------------------------")

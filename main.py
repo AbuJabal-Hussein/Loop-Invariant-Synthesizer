@@ -27,3 +27,4 @@ if __name__ == '__main__':
     # print('PyCharm')
     input_code = read_source_file("benchmarks/b2.py")
     VCGenerator()(input_code)
+
