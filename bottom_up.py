@@ -220,7 +220,7 @@ class BottomUp:
                 for res in results:
                     batched.append(res)
 
-            pool = multiprocessing.Pool(num)
+            # pool = multiprocessing.Pool(num)
             # for proc in processes:
             #     proc.join()
             batch = batched
