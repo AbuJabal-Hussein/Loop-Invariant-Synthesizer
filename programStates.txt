@@ -1,5 +1,1 @@
-i int 0n int 5x int 6myList list [4, 3, 2]y int 6
-i int 1n int 5x int 7myList list [4, 3, 2, 7]y int 6
-i int 2n int 5x int 8myList list [4, 3, 2, 7, 8]y int 6
-i int 3n int 5x int 9myList list [4, 3, 2, 7, 8, 9]y int 6
-i int 4n int 5x int 10myList list [4, 3, 2, 7, 8, 9, 10]y int 6
+num int 59826494count int 0

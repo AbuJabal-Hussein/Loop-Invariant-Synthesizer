@@ -69,9 +69,13 @@ class BottomUp:
         # Dictionary: 'num': {'1', '3'}, 'op': {'+', '=', '<', '>='}, where 1, 3 and the ops are the used tokens in code
         self.used_tokens_dict = self.build_tokens_dict()
         # Similar dictionary to the one above but for all starting and grown ones
-        self.reverse_dict = {"id": [],
-                             "num": [],
-                             "op": []}
+        self.reverse_dict = {"ID": [],
+                             "NUM": [],
+                             "RELOP": [],
+                             "PLUSMINUS": [],
+                             "MULTDIV": [],
+                             "ASSOP": [],
+                             }
         self.p = [rule.rhs[0] for rule in self.grammar["VAR"]]
         self.program_states_file = prog_states_file  # Where __inv__ prints
         self.program_states = list()  #
@@ -332,10 +336,14 @@ class BottomUp:
         :return:
         """
         p = []
+        # print("ghkrfhgiuroehg: {}".format(self.p))
+        # print("ghkrfhgiuroehg: {}".format(self.used_tokens_dict))
+        # print("ghkrfhgiuroehg: {}".format(self.reverse_dict))
+        # print("ghkrfhgiuroehg  intersection: {}".format(self.used_tokens_dict["ID"].intersection(set(self.p))))
         for _type in self.reverse_dict.keys():
-            if _type == "id":
-                for var in self.used_tokens_dict[_type].intersection(self.p):
-                    p.append(Word(var, ['id']))
+            if _type == "ID":
+                for var in self.used_tokens_dict[_type].intersection(set(self.p)):
+                    p.append(Word(var, ['ID']))
                     self.reverse_dict[_type].append(var)
                 continue
 
@@ -343,6 +351,7 @@ class BottomUp:
                 for var in self.used_tokens_dict[_type]:
                     p.append(Word(var, [_type]))
                     self.reverse_dict[_type].append(var)
+        # print(p)
         return p
 
     def tag_and_convert(self, inv):
@@ -380,7 +389,7 @@ class BottomUp:
                 continue
             try:
                 inv = self.vc_gen.generate_vc(ast)[0]
-                # print("str: {} ast: {} inv: {}".format(word, ast, inv))
+                print("str: {} ast: {} inv: {}".format(word, ast, inv))
             except TypeError as err:
                 if "not supported between instances of " in err.args[0] \
                         or "unsupported operand type(s) for" in err.args[0]:
@@ -391,8 +400,6 @@ class BottomUp:
                 if 'sort mismatch' in err.args[0]:
                     continue
                 raise err
-            except KeyError as kerr:
-                continue
             if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
                 continue
             t = simplify(inv)
@@ -428,6 +435,7 @@ class BottomUp:
         # print(self.reverse_dict)
         starting = deepcopy(self.p)
         self.rev_dict = deepcopy(self.reverse_dict)
+        print("self.rev: {}".format(self.reverse_dict))
         # ehhs = dict()
         i = 0
         # ehh = 0
@@ -461,10 +469,13 @@ class BottomUp:
             # ehh = ehh + 1
             # if len(ehhs.keys()) > 7:
             #     yield curr_batch
+            # print("curr_batch after yielding: {}".format(curr_batch))
+            # print("self.z3_to_str.values() after yielding: {}".format(self.z3_to_str.values()))
             for word in curr_batch:
-                if word.word in self.z3_to_str.values():
+                if word.word in self.z3_to_str.values() or "E0" in word.tags:
                     self.p.append(word)
             self.p.extend(deepcopy(starting))
+            # print("P after yielding: {}".format(self.p))
         # print("THE EHHS:")
         # print(ehhs)
 
