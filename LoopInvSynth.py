@@ -5,7 +5,7 @@ class LoopInvSynth(object):
     def __call__(self, states_file, input_code):
         StatesFile.open(states_file)
         exec(input_code)
-        StatesFile.close(states_file)
+        StatesFile.close()
         # StatesFile.close(states_file)
 
 

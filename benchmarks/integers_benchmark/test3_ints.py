@@ -4,6 +4,5 @@ count = 0
 
 while num >= 1:
 	__inv__(num=num, count=count)
-	num = num / 10
+	num = int(num / 10)
 	count += 1
-print(count)

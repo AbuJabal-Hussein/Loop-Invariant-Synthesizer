@@ -2,10 +2,11 @@ from syntax import PythonParser, read_source_file
 import operator
 from z3 import Int, ForAll, Implies, Not, And, Or, Solver, unsat, sat, IntSort, Bool, BoolSort, String, StringSort, \
     Array, IntVector, ArraySort, StringVal, ArithRef, ArrayRef, SeqRef, is_array, BoolRef, is_string_value, Length, \
-    is_string, is_int, If, IndexOf, Exists, simplify
+    is_string, is_int, If, IndexOf, Exists, simplify, Real, RealVal, Q
+
 
 OP = {'+': operator.add, '-': operator.sub,
-      '*': operator.mul, '/': operator.floordiv,
+      '*': operator.mul, '/': (lambda a, b: a / b),
       '!=': operator.ne, '>': operator.gt, '<': operator.lt,
       '<=': operator.le, '>=': operator.ge, '==': operator.eq,
       'AND': And, 'OR': Or}
@@ -427,3 +428,9 @@ class VCGenerator(object):
         tr_lists = [True, [True, True], True]
         tr_lists[0] = construct_tr(ast)
         return tr_lists[0], tr_lists[1][0], tr_lists[1][1], tr_lists[2]
+
+
+
+if __name__ == '__main__':
+    input_code = read_source_file("benchmarks/integers_benchmark/test3_ints.py")
+    pre_loop, loop_cond, loop_body, post_loop = VCGenerator()(input_code)

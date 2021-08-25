@@ -17,14 +17,22 @@ class StatesFile:
     @staticmethod
     def append(txt):
         global st_file
-        st_file.write(txt)
-        print("------------appended------------")
+        if st_file is not None:
+            st_file.write(txt)
+            print("------------appended------------")
 
     @staticmethod
-    def close(file):
-        st_file.close()
+    def close():
+        global st_file
+        if st_file is not None:
+            st_file.close()
         # if os.path.exists(file):
         #     os.remove(file)
+
+    @staticmethod
+    def remove(file):
+        if os.path.exists(file):
+            os.remove(file)
 
 
 def __inv__(**kwargs):

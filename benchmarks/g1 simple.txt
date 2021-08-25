@@ -1,0 +1,6 @@
+\( \) (?P<RELOP>[!<>]=|([+\-*/<>])|==) (?P<ID>[^\W\d]\w*)  (?P<num>[+\-]?\d+) =
+GRAMMAR
+S -> LEXPR
+LEXPR -> ( ID RELOP ID )
+VAR -> a | b | x | y | z | n
+RELOP -> == | != | < | <= | > | >=

@@ -2,7 +2,7 @@ import argparse
 from LoopInvSynth import LoopInvSynth
 from bottom_up import *
 import multiprocessing
-import timeout_decorator
+# import timeout_decorator
 import sys
 
 
@@ -151,10 +151,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.tests is not None:
+    if args.tests:
         TestIntCodes().run()
         exit(0)
-    if not args.program_file or not args.grammar:
+    if not args.program_file or not args.grammar_file:
         print("error: the following arguments are required: --program/-p, --grammar/-g  OR --tests")
         exit(1)
     run(args.program_file, args.grammar_file, args.conds_file)
