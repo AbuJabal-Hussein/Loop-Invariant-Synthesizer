@@ -49,7 +49,7 @@ def remove_equal(x, ys, z3_to_str):
 
 class BottomUp:
 
-    def __init__(self, grammar, tokens, prog_file, prog_states_file):
+    def __init__(self, grammar, tokens, prog_file, prog_states_file, timeout=-1):
         """
         Initialised with grammar and its tokens
         :param grammar: The Grammar. non-terminals on the right-hand side of production rules are delimited by spaces
@@ -57,6 +57,8 @@ class BottomUp:
         :param tokens: The Grammar's tokens
         """
         self.rev_dict = dict()
+        self.timeout = timeout
+        self.start_time = time() if timeout > 0 else None
         self.strings = []
         self.grammar = Grammar.from_string(grammar)
         print("Grammar:\n{}".format(self.grammar))
@@ -70,11 +72,13 @@ class BottomUp:
         self.used_tokens_dict = self.build_tokens_dict()
         # Similar dictionary to the one above but for all starting and grown ones
         self.reverse_dict = {"ID": [],
-                             "NUM": [],
-                             "RELOP": [],
-                             "PLUSMINUS": [],
-                             "MULTDIV": [],
-                             "ASSOP": [],
+                             "RELOP": [">=", "!=", "<=", "==", ">", "<"],
+                             "PLUSMINUS": ["+", "-"],
+                             "MULTDIV": ["*", "/"],
+                             "ASSOP": ["+=", "-=", "*=", "/="],
+                             "AND": ["and"],
+                             "OR": ["or"],
+                             "NOT": ["not"]
                              }
         self.p = [rule.rhs[0] for rule in self.grammar["VAR"]]
         self.program_states_file = prog_states_file  # Where __inv__ prints
@@ -175,7 +179,7 @@ class BottomUp:
         return batch
 
     @staticmethod
-    def elim_equivalents_multi_proccess(batch: list, generator, vars_dict):
+    def elim_equivalents_multi_proccess(batch: list, generator, vars_dict, timeout=-1):
         started = time()
         total_size = len(batch)
         def chunkIt(seq, split):
@@ -194,6 +198,9 @@ class BottomUp:
         num = max(multiprocessing.cpu_count() - 1, 8)
         print("num CPUS: %d" % num)
         while len(batch) > 1:
+            print("Checking timeout: if {} > {} > 0".format(time(), timeout))
+            if time() > timeout > 0:
+                return []
             # start_while = time()
             # x = deepcopy(batch[0]).translate(ctx)
             pool = multiprocessing.Pool(processes=num)
@@ -330,7 +337,7 @@ class BottomUp:
                         self.vars_dict_multi[var] = [builder, True, 1]
                 self.program_states.append(curr_state_rules)
 
-    def build_starting_p(self):
+    def build_starting_id(self):
         """
         Builds starting p and the transposed dictionary
         :return:
@@ -340,18 +347,21 @@ class BottomUp:
         # print("ghkrfhgiuroehg: {}".format(self.used_tokens_dict))
         # print("ghkrfhgiuroehg: {}".format(self.reverse_dict))
         # print("ghkrfhgiuroehg  intersection: {}".format(self.used_tokens_dict["ID"].intersection(set(self.p))))
-        for _type in self.reverse_dict.keys():
-            if _type == "ID":
-                for var in self.used_tokens_dict[_type].intersection(set(self.p)):
-                    p.append(Word(var, ['ID']))
-                    self.reverse_dict[_type].append(var)
-                continue
-
-            if _type in self.used_tokens_dict:
-                for var in self.used_tokens_dict[_type]:
-                    p.append(Word(var, [_type]))
-                    self.reverse_dict[_type].append(var)
+        # for _type in self.reverse_dict.keys():
+        #     if _type == "ID":
+        #         for var in self.used_tokens_dict[_type].intersection(set(self.p)):
+        #             p.append(Word(var, ['ID']))
+        #             self.reverse_dict[_type].append(var)
+        #         continue
+        #
+        #     if _type in self.used_tokens_dict:
+        #         for var in self.used_tokens_dict[_type]:
+        #             p.append(Word(var, [_type]))
+        #             self.reverse_dict[_type].append(var)
         # print(p)
+        for var in self.used_tokens_dict["ID"].intersection(set(self.p)):
+            p.append(Word(var, ['ID']))
+            self.reverse_dict["ID"].append(var)
         return p
 
     def tag_and_convert(self, inv):
@@ -379,6 +389,10 @@ class BottomUp:
         self.strings = []
         lst = []
         for code in batch:
+            if self.start_time:
+                print("Checking timeout: if {} - {} >= 0".format(time(), self.start_time + self.timeout))
+                if time() - (self.start_time + self.timeout) >= 0:
+                    return []
             if type(code) is not str:
                 word = code.word
             else:
@@ -428,7 +442,7 @@ class BottomUp:
 
     def bottom_up(self):
         # print("HMMM")
-        self.p = self.build_starting_p()
+        self.p = self.build_starting_id()
         # print("before Grow:")
         # print(self.p)
         # print("self.reverse_dict:")
@@ -440,6 +454,10 @@ class BottomUp:
         i = 0
         # ehh = 0
         while True:
+            print("Checking timeout: if {} - {} <= 0".format(time(), self.start_time + self.timeout))
+            if self.start_time:
+                if time() - (self.start_time + self.timeout) >= 0:
+                    return "timed out"
             i = i + 1
             self.z3_to_str = dict()
             curr_batch = self.grow()
@@ -451,9 +469,21 @@ class BottomUp:
             # print(self.reverse_dict)
             # z3_batch = list(self.vc_gen.generate_vc(self.vc_gen.parser(b.word)) for b in curr_batch)
             z3_batch = self.batch_to_z3(curr_batch)
+            print("Checking timeout: if {} - {} <= 0".format(time(), self.start_time + self.timeout))
+            if self.start_time:
+                if time() - (self.start_time + self.timeout) >= 0:
+                    return "timed out"
             print("converted %d:" % len(z3_batch))
             print(z3_batch)
-            z3_batch = self.elim_equivalents_multi_proccess(self.strings, self.vc_gen, self.vars_dict_multi)
+            if self.start_time:
+                z3_batch = self.elim_equivalents_multi_proccess(self.strings, self.vc_gen, self.vars_dict_multi,
+                                                                self.start_time + self.timeout)
+            else:
+                z3_batch = self.elim_equivalents_multi_proccess(self.strings, self.vc_gen, self.vars_dict_multi)
+            print("Checking timeout: if {} - {} <= 0".format(time(), self.start_time + self.timeout))
+            if self.start_time:
+                if time() - (self.start_time + self.timeout) >= 0:
+                    return "timed out"
             print("Eliminated\nNew Size: %d" % len(z3_batch))
             for inv in z3_batch:
                 if self.check_sat(inv):
@@ -472,7 +502,7 @@ class BottomUp:
             # print("curr_batch after yielding: {}".format(curr_batch))
             # print("self.z3_to_str.values() after yielding: {}".format(self.z3_to_str.values()))
             for word in curr_batch:
-                if word.word in self.z3_to_str.values() or "E0" in word.tags:
+                if word.word in self.z3_to_str.values() or any(k in word.tags for k in self.grammar.rules.keys()):
                     self.p.append(word)
             self.p.extend(deepcopy(starting))
             # print("P after yielding: {}".format(self.p))
