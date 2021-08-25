@@ -1,1 +1,4 @@
-num int 59826494count int 0
+x int 60y int 24
+x int 36y int 24
+x int 12y int 24
+x int 12y int 12

@@ -15,8 +15,9 @@ def get_pre_post_conds(file):
             var_name, data = line.split(sep="=")
             if var_name == "post_cond":
                 post_cond_ = data.strip()
-            if var_name == "pre_cond":
+            elif var_name == "pre_cond":
                 pre_cond_ = data.strip()
+
         return pre_cond_, post_cond_
 
 
@@ -30,7 +31,10 @@ def get_grammar_and_tokens(file):
     return grammar.strip(), tokens.strip()
 
 
-def run(program_file, grammar_file, conds_file):
+def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None):
+    back_up = sys.stdout
+    if omit_print:
+        sys.stdout = open(os.devnull, 'w')
     prog_states_file = "programStates.txt"
     input_code = read_source_file(program_file)
     LoopInvSynth()(prog_states_file, input_code)
@@ -55,11 +59,16 @@ def run(program_file, grammar_file, conds_file):
                Implies(And(inv, post_loop), post_cond)]
         solver.add(Not(And(lst)))
         if solver.check() == unsat:
+            sys.stdout = back_up
             print("Found inv: {}".format(inv))
+            if res_dict:
+                res_dict["result"] = inv
             return inv
         solver.reset()
 
-LOCAL_TIMEOUT = 20
+
+LOCAL_TIMEOUT = 60 * 10
+
 
 class TestIntCodes:
 
@@ -71,50 +80,127 @@ class TestIntCodes:
     def setUp(self):
         self.startTime = time()
         self.path_prefix = "benchmarks/integers_benchmark/"
-        sys.stdout = open(os.devnull, 'w')
 
     def test1_int(self):
+        res_dict = dict()
+        inv = None
         proc = multiprocessing.Process(target=run, kwargs={"program_file": self.path_prefix + "test1_ints.py",
                                                            "grammar_file": self.path_prefix + "grammar",
-                                                           "conds_file": self.path_prefix + "conditions_test1"})
+                                                           "conds_file": self.path_prefix + "conditions_test1",
+                                                           "omit_print": True,
+                                                           "res_dict": res_dict})
         proc.start()
         proc.join(LOCAL_TIMEOUT)
         if proc.is_alive():
-            proc.terminate()
+            try:
+                proc.terminate()
+            except multiprocessing.ProcessError as e:
+                print("---Timed out---")
+            return False
+        if res_dict["result"] != inv:
             return False
 
-        # inv = run(self.path_prefix + "test1_ints.py", self.path_prefix + "grammar",
-        #           self.path_prefix + "conditions_test1")
         return True
 
     def test2_int(self):
-        inv = run(self.path_prefix + "test2_ints.py", self.path_prefix + "grammar",
-                  self.path_prefix + "conditions_test2")
+        res_dict = dict()
+        x = Int("x")
+        inv = x > 0
+        proc = multiprocessing.Process(target=run, kwargs={"program_file": self.path_prefix + "test2_ints.py",
+                                                           "grammar_file": self.path_prefix + "grammar",
+                                                           "conds_file": self.path_prefix + "conditions_test2",
+                                                           "omit_print": True,
+                                                           "res_dict": res_dict})
+        proc.start()
+        proc.join(LOCAL_TIMEOUT)
+        if proc.is_alive():
+            try:
+                proc.terminate()
+            except Exception as e:
+                print(e)
+            return False
+        if res_dict["result"] != inv:
+            return False
+
         return True
 
     def test3_int(self):
-        inv = run(self.path_prefix + "test3_ints.py", self.path_prefix + "grammar",
-                  self.path_prefix + "conditions_test3")
+        res_dict = dict()
+        x = Int("x")
+        inv = x > 0
+        proc = multiprocessing.Process(target=run, kwargs={"program_file": self.path_prefix + "test3_ints.py",
+                                                           "grammar_file": self.path_prefix + "grammar",
+                                                           "conds_file": self.path_prefix + "conditions_test3",
+                                                           "omit_print": True,
+                                                           "res_dict": res_dict})
+        proc.start()
+        proc.join(LOCAL_TIMEOUT)
+        if proc.is_alive():
+            try:
+                proc.terminate()
+            except Exception as e:
+                print(e)
+            return False
+        if res_dict["result"] != inv:
+            print("Got res: {}".format(res_dict["result"]))
+            return False
+
         return True
 
     def test4_int(self):
-        inv = run(self.path_prefix + "test4_ints.py", self.path_prefix + "grammar",
-                  self.path_prefix + "conditions_test4")
+        res_dict = dict()
+        x = Int("x")
+        inv = x > 0
+        proc = multiprocessing.Process(target=run, kwargs={"program_file": self.path_prefix + "test4_ints.py",
+                                                           "grammar_file": self.path_prefix + "grammar",
+                                                           "conds_file": self.path_prefix + "conditions_test4",
+                                                           "omit_print": True,
+                                                           "res_dict": res_dict})
+        proc.start()
+        proc.join(LOCAL_TIMEOUT)
+        if proc.is_alive():
+            try:
+                proc.terminate()
+            except Exception as e:
+                print(e)
+            return False
+        if res_dict["result"] != inv:
+            print("Got res: {}".format(res_dict["result"]))
+            return False
+
         return True
 
     def test5_int(self):
-        inv = run(self.path_prefix + "test5_ints.py", self.path_prefix + "grammar",
-                  self.path_prefix + "conditions_test5")
+        res_dict = dict()
+        x = Int("x")
+        inv = x > 0
+        proc = multiprocessing.Process(target=run, kwargs={"program_file": self.path_prefix + "test5_ints.py",
+                                                           "grammar_file": self.path_prefix + "grammar",
+                                                           "conds_file": self.path_prefix + "conditions_test5",
+                                                           "omit_print": True,
+                                                           "res_dict": res_dict})
+        proc.start()
+        proc.join(LOCAL_TIMEOUT)
+        if proc.is_alive():
+            try:
+                proc.terminate()
+            except Exception as e:
+                print(e)
+            return False
+        if res_dict["result"] != inv:
+            print("Got res: {}".format(res_dict["result"]))
+            return False
+
         return True
 
     def tearDown(self, name):
-        sys.stdout = self.__stdout__
         t = time() - self.startTime
         print('%s: %.3f' % (name, t))
 
     def run(self):
-        message = "Passed"
         for test in [self.test1_int, self.test2_int, self.test3_int, self.test4_int, self.test5_int]:
+            print("------------------------------------------------------------------------------------"
+                  "----------------------------------------------------")
             print("Starting " + test.__name__ + "...")
             err = None
             self.setUp()
@@ -128,9 +214,8 @@ class TestIntCodes:
                 message = "Passed"
             if err:
                 message = err
+            print(test.__name__ + ": " + str(message))
             self.tearDown(test.__name__)
-            print(test.__name__ + "..." + str(message))
-
 
 
 if __name__ == '__main__':
@@ -158,10 +243,3 @@ if __name__ == '__main__':
         print("error: the following arguments are required: --program/-p, --grammar/-g  OR --tests")
         exit(1)
     run(args.program_file, args.grammar_file, args.conds_file)
-
-
-
-    # import z3Test
-    # LoopInvSynth()
-    # print('PyCharm')
-    # prog_file = "benchmarks/test_append.py"
