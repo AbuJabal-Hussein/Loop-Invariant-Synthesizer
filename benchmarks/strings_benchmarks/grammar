@@ -1,13 +1,21 @@
 (if|else|elif|while)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+) (?P<ASSOP>[+\-*/]=) (?P<MULTDIV>[*/]) (?P<PLUSMINUS>[+\-])  : (?P<RPAREN>\)) (?P<LSPAREN>\[) (?P<RSPAREN>\]) (?P<NOT>not) (?P<FALSE>False) (?P<TRUE>True) (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<REMOVE>remove) (?P<MAX>max) (?P<INDEX>index) (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) (?P<INDENT2>(\t\t)) (?P<INDENT>(\t))  =
-GRAMMAR 
+GRAMMAR
 S   ->   E
-E   ->   LPAREN E RPAREN | UN_REL E  |    E MULTDIV E   |   E PLUSMINUS E   | E RELOP E
+E   ->   LPAREN E RPAREN | UN_REL E  |    E MULTDIV E   |   E PLUSMINUS E   | E RELOP E | INT LPAREN E RPAREN
 E   ->   E BI_REL E | LIST_E | DEREF | FUNCS
 E   ->   E0
-FUNCS -> LEN_FUNC | APPEND_FUNC
+FUNCS -> LEN_FUNC | REVERSE_FUNC | APPEND_FUNC | REMOVE_FUNC | MAX_FUNC | INDEX_FUNC | SUBSTRING_FUNC
 LEN_FUNC   -> LEN LPAREN E RPAREN
+INV_FUNC   -> INV LPAREN INV_ARGS RPAREN
+REVERSE_FUNC -> REVERSE CALL
 APPEND_FUNC -> APPEND CALL
-E0  ->   ID   |   NUM
+REMOVE_FUNC -> REMOVE CALL
+MAX_FUNC -> MAX CALL
+INDEX_FUNC -> INDEX CALL
+SUBSTRING_FUNC -> SUBSTRING CALL
+E0  ->   ID   |   NUM   |   STR   | BOOL
+STR ->   STR1 | STR2
+BOOL -> TRUE | FALSE
 
 BI_REL -> AND | OR
 UN_REL -> NOT
@@ -16,4 +24,6 @@ LIST_E -> LSPAREN LIST_ITEMS RSPAREN | LSPAREN RSPAREN
 LIST_ITEMS -> E | E COMMA LIST_ITEMS
 FUNC_ARGS  -> LIST_ITEMS
 DEREF  -> ID LSPAREN E RSPAREN
+INV_ARGS -> ASSIGN | ASSIGN COMMA INV_ARGS
+ASSIGN -> ID = E
 VAR -> x | y | z | i | w | n | myList | count | num | limiter

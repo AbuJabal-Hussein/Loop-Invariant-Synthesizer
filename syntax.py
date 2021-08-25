@@ -67,7 +67,7 @@ class PythonParser(object):
     REMOVE_FUNC -> REMOVE CALL
     MAX_FUNC -> MAX CALL
     INDEX_FUNC -> INDEX CALL
-    SUBSTRING_FUNC -> SUBSTRING MAX
+    SUBSTRING_FUNC -> SUBSTRING CALL
     E0  ->   ID   |   NUM   |   STR   | BOOL
     STR ->   STR1 | STR2
     BOOL -> TRUE | FALSE
@@ -293,6 +293,7 @@ if __name__ == '__main__':
     find ==> Exists(jj, arr[jj] == 5)
     index ==> IndexOf() - done
     substring ==> IsSubset(a, b)  ,  SubString()
+    charAt ==> SubString(str, i, 1)
     max ==> use max = If(x > y, x, y) - done
     """
 

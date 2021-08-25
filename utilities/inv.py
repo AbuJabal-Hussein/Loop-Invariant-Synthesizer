@@ -43,6 +43,8 @@ def __inv__(**kwargs):
             return "int"
         if type(var) is list:
             return "list"
+        if type(var) is bool:
+            return "bool"
 
     st = ''
     for k, v in kwargs.items():
@@ -56,3 +58,7 @@ def append(lst, x):
     mylist = lst[:]
     mylist.append(x)
     return mylist
+
+
+def charAt(str1, index):
+    return str1[index]

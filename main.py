@@ -12,7 +12,7 @@ def get_pre_post_conds(file):
     with open(file, "r") as reader:
         content = reader.read()
         for line in content.split(sep='\n'):
-            var_name, data = line.split(sep="=")
+            var_name, data = line.split(sep=":")
             if var_name == "post_cond":
                 post_cond_ = data.strip()
             if var_name == "pre_cond":

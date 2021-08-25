@@ -1,1 +1,5 @@
-num int 59826494count int 0
+str1 str asdfgfdsastrLen int 9i int 0isPalindrome bool True
+str1 str asdfgfdsastrLen int 9i int 1isPalindrome bool True
+str1 str asdfgfdsastrLen int 9i int 2isPalindrome bool True
+str1 str asdfgfdsastrLen int 9i int 3isPalindrome bool True
+str1 str asdfgfdsastrLen int 9i int 4isPalindrome bool True

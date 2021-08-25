@@ -1,2 +1,2 @@
-pre_cond = True
-post_cond = True
+pre_cond : True
+post_cond : True
