@@ -21,17 +21,15 @@ def get_pre_post_conds(file):
         return pre_cond_, post_cond_
 
 
-def get_grammar_and_tokens(file):
-    grammar = tokens = r""
+def get_grammar(file):
+    grammar = r""
     with open(file, "r") as reader:
         content = reader.read()
-        t, g = [x.strip() for x in content.split("GRAMMAR")]
-    grammar = r"{}".format(g)
-    tokens = r"{}".format(t)
-    return grammar.strip(), tokens.strip()
+    grammar = r"{}".format(content.strip())
+    return grammar.strip()
 
 
-def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None):
+def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None, timeout=-1):
     back_up = sys.stdout
     if omit_print:
         sys.stdout = open(os.devnull, 'w')
@@ -40,9 +38,19 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None)
     LoopInvSynth()(prog_states_file, input_code)
     print("code: {}".format(input_code))
     pre_loop, loop_cond, loop_body, post_loop = VCGenerator()(input_code)
-    GRAMMAR, TOKENS = get_grammar_and_tokens(grammar_file)
-    TOKENS = TOKENS.split()
-    bt = BottomUp(grammar=GRAMMAR, prog_states_file=prog_states_file, tokens=TOKENS, prog_file=program_file)
+    GRAMMAR = get_grammar(grammar_file)
+    TOKENS = r"(if|else|elif|while)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+)" \
+             r" (?P<ASSOP>[+\-*/]=) (?P<MULTDIV>[*/]) (?P<PLUSMINUS>[+\-])  :" \
+             r" (?P<RPAREN>\)) (?P<LSPAREN>\[) (?P<RSPAREN>\]) " \
+             r" (?P<NOT>not) (?P<FALSE>False) (?P<TRUE>True) " \
+             r" (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<REMOVE>remove) (?P<MAX>max)" \
+             r" (?P<INDEX>index) (?P<SUBSTRING>substring) (?P<INT>int)" \
+             r" (?P<STR1>\'([^\n\r\"\'\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\'\\]|\\[rnt\"\'\\])+\") " \
+             r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) " \
+             r" (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) " \
+             r" (?P<INDENT2>(\t\t)) (?P<INDENT>(\t))  =".split()
+    bt = BottomUp(grammar=GRAMMAR, prog_states_file=prog_states_file, tokens=TOKENS, prog_file=program_file,
+                  timeout=timeout)
     pre_cond, post_cond = get_pre_post_conds(conds_file)
     pre_cond, post_cond = bt.batch_to_z3([pre_cond, post_cond]) or True, True
     # print("Vars:")
@@ -53,6 +61,9 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None)
     # print(bt.used_tokens_dict)
     solver = Solver()
     for b in bt.bottom_up():
+        if b == "timed out":
+            print("timed out")
+            return False
         inv, inv_tagged = b
         lst = [Implies(And(pre_cond, pre_loop), inv_tagged),
                Implies(And(inv, loop_cond, loop_body), inv_tagged),
@@ -67,7 +78,7 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None)
         solver.reset()
 
 
-LOCAL_TIMEOUT = 60 * 10
+LOCAL_TIMEOUT = 60 * 7
 
 
 class TestIntCodes:
@@ -88,7 +99,8 @@ class TestIntCodes:
                                                            "grammar_file": self.path_prefix + "grammar",
                                                            "conds_file": self.path_prefix + "conditions_test1",
                                                            "omit_print": True,
-                                                           "res_dict": res_dict})
+                                                           "res_dict": res_dict,
+                                                           "timeout": LOCAL_TIMEOUT})
         proc.start()
         proc.join(LOCAL_TIMEOUT)
         if proc.is_alive():
@@ -110,7 +122,8 @@ class TestIntCodes:
                                                            "grammar_file": self.path_prefix + "grammar",
                                                            "conds_file": self.path_prefix + "conditions_test2",
                                                            "omit_print": True,
-                                                           "res_dict": res_dict})
+                                                           "res_dict": res_dict,
+                                                           "timeout": LOCAL_TIMEOUT})
         proc.start()
         proc.join(LOCAL_TIMEOUT)
         if proc.is_alive():
@@ -132,7 +145,8 @@ class TestIntCodes:
                                                            "grammar_file": self.path_prefix + "grammar",
                                                            "conds_file": self.path_prefix + "conditions_test3",
                                                            "omit_print": True,
-                                                           "res_dict": res_dict})
+                                                           "res_dict": res_dict,
+                                                           "timeout": LOCAL_TIMEOUT})
         proc.start()
         proc.join(LOCAL_TIMEOUT)
         if proc.is_alive():
@@ -155,7 +169,8 @@ class TestIntCodes:
                                                            "grammar_file": self.path_prefix + "grammar",
                                                            "conds_file": self.path_prefix + "conditions_test4",
                                                            "omit_print": True,
-                                                           "res_dict": res_dict})
+                                                           "res_dict": res_dict,
+                                                           "timeout": LOCAL_TIMEOUT})
         proc.start()
         proc.join(LOCAL_TIMEOUT)
         if proc.is_alive():
@@ -178,7 +193,8 @@ class TestIntCodes:
                                                            "grammar_file": self.path_prefix + "grammar",
                                                            "conds_file": self.path_prefix + "conditions_test5",
                                                            "omit_print": True,
-                                                           "res_dict": res_dict})
+                                                           "res_dict": res_dict,
+                                                           "timeout": LOCAL_TIMEOUT})
         proc.start()
         proc.join(LOCAL_TIMEOUT)
         if proc.is_alive():
@@ -204,6 +220,7 @@ class TestIntCodes:
             print("Starting " + test.__name__ + "...")
             err = None
             self.setUp()
+            t = None
             try:
                 t = test()
             except Exception as e:
@@ -242,4 +259,4 @@ if __name__ == '__main__':
     if not args.program_file or not args.grammar_file:
         print("error: the following arguments are required: --program/-p, --grammar/-g  OR --tests")
         exit(1)
-    run(args.program_file, args.grammar_file, args.conds_file)
+    run(args.program_file, args.grammar_file, args.conds_file, timeout=LOCAL_TIMEOUT)

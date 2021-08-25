@@ -1,5 +1,3 @@
-(if|else|elif|while)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+) (?P<ASSOP>[+\-*/]=) (?P<MULTDIV>[*/]) (?P<PLUSMINUS>[+\-])  : (?P<RPAREN>\)) (?P<LSPAREN>\[) (?P<RSPAREN>\]) (?P<NOT>not) (?P<FALSE>False) (?P<TRUE>True) (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<REMOVE>remove) (?P<MAX>max) (?P<INDEX>index) (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) (?P<INDENT2>(\t\t)) (?P<INDENT>(\t))  =
-GRAMMAR 
 S   ->   S1 | S1 NEWLINE | S1 NEWLINE INDENT   |  E  |  S1 NEWLINE S
 
 
