@@ -1,0 +1,2 @@
+pre_cond : True
+post_cond : (countDigits == len(str1)) and (i > len(digits))

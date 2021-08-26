@@ -2,8 +2,7 @@ from syntax import PythonParser, read_source_file
 import operator
 from z3 import Int, ForAll, Implies, Not, And, Or, Solver, unsat, sat, IntSort, Bool, BoolSort, String, StringSort, \
     Array, IntVector, ArraySort, StringVal, ArithRef, ArrayRef, SeqRef, is_array, BoolRef, is_string_value, Length, \
-    is_string, is_int, If, IndexOf, Exists, simplify, Real, RealVal, Q
-
+    is_string, is_int, If, IndexOf, Exists, simplify, Real, RealVal, Q, z3types, SubString
 
 OP = {'+': operator.add, '-': operator.sub,
       '*': operator.mul, '/': (lambda a, b: a / b),
@@ -64,24 +63,43 @@ class VCGenerator(object):
                 num += 1
 
         gen_var = gen_name()
+        list_types = ['LIST_E', 'LIST_COMPREHENSION', 'reverse', 'append', 'remove']
+        bool_types = ['BOOL', 'all', 'any']
+        string_types = ['STR', 'charAt', 'substring']
 
         def get_expr_type(expr, eval_items):
             if expr.subtrees[0].root == 'ID':
                 item_type = vars_dict[str(eval_items[0]) + '_'][1]
-            elif expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
+            elif expr.subtrees[0].root in list_types:
                 item_type = ArraySort(IntSort(), eval_items[0][2])
             elif isinstance(eval_items[0], int) or expr.subtrees[0].root == 'len':
                 item_type = IntSort()
-            elif isinstance(eval_items[0], bool):
+            elif isinstance(eval_items[0], bool) or expr.subtrees[0].root in bool_types:
                 item_type = BoolSort()
-            elif is_string(eval_items[0]):
+            elif is_string(eval_items[0]) or expr.subtrees[0].root in string_types:
                 item_type = StringSort()
             else:
                 item_type = IntSort()
             return item_type
 
+        def create_var(id_type, var_name):
+            if id_type == IntSort():
+                return Int(var_name)
+            elif id_type == BoolSort():
+                return Bool(var_name)
+            elif id_type == StringSort():
+                return String(var_name)
+            elif id_type == ArraySort(IntSort(), IntSort()):
+                return Array(var_name, IntSort(), IntSort())
+            elif id_type == ArraySort(IntSort(), BoolSort()):
+                return Array(var_name, IntSort(), BoolSort())
+            elif id_type == ArraySort(IntSort(), StringSort()):
+                return Array(var_name, IntSort(), StringSort())
+            return Int(var_name)
+
         def expr_is_int(expr, expr_eval):
-            return is_int(expr_eval) or isinstance(expr_eval, int) or expr.root in ['len', 'max', 'index']
+            return is_int(expr_eval) or isinstance(expr_eval, int) or expr.root in ['len', 'max', 'min', 'index', 'sum']
+
 
         def eval_expr(expr, tagged_id=False, collected_vars=None):
             tagged_id = self.should_tag if not self.should_tag else tagged_id
@@ -121,7 +139,7 @@ class VCGenerator(object):
                 elif expr2.root == "BOOL" or isinstance(eval_rhs, BoolRef) or type(eval_rhs) == bool:
                     vars_dict[var_name] = [Bool(var_name), BoolSort(), 1]
                     vars_dict[var_name + '_'] = [Bool(var_name + '_'), BoolSort(), 1]
-                elif expr2.root in ['LIST_E', 'reverse', 'append', 'remove']:
+                elif expr2.root in list_types:
                     vars_dict[var_name] = [Array(var_name, IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), eval_rhs[3]]
                     vars_dict[var_name + '_'] = [Array(var_name + '_', IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), eval_rhs[3]]
 
@@ -129,7 +147,7 @@ class VCGenerator(object):
                 if not(collected_vars is None):
                     collected_vars.append(OP['=='](eval_lhs, eval_expr(expr1, tagged_id=False)))
 
-                if expr2.root in ['LIST_E', 'reverse', 'append', 'remove']:
+                if expr2.root in list_types:
                     return And(OP['=='](eval_lhs, eval_rhs[1]), eval_rhs[0])
                 else:
                     if type(eval_rhs) is tuple:
@@ -196,7 +214,7 @@ class VCGenerator(object):
                     arr2 = vars_dict[var_name][0]
                     arr_len = vars_dict[var_name][2]
                     item_type = arr2.range()
-                elif expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                elif expr.subtrees[0].root in list_types:
                     arr2 = eval_items[0][1]
                     arr_len = eval_items[0][3]
                     item_type = eval_items[0][2]
@@ -206,7 +224,7 @@ class VCGenerator(object):
                     item_type = IntSort()
 
                 arr = Array(next(gen_var), IntSort(), item_type)
-                if expr.subtrees[0].root not in ['LIST_E', 'reverse', 'append', 'remove']:
+                if expr.subtrees[0].root not in list_types:
                     arr_value = And([arr[i] == arr2[arr_len - i - 1] for i in range(arr_len)])
                 else:
                     arr_value = And([eval_items[0][0]] + [arr[i] == arr2[arr_len - i - 1] for i in range(arr_len)])
@@ -235,7 +253,7 @@ class VCGenerator(object):
                     arr2 = vars_dict[var_name][0]
                     arr_len = vars_dict[var_name][2]
                     item_type = arr2.range()
-                elif expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                elif expr.subtrees[0].root in list_types:
                     arr2 = eval_items[0][1]
                     arr_len = eval_items[0][3]
                     item_type = eval_items[0][2]
@@ -248,14 +266,14 @@ class VCGenerator(object):
                 if expr.subtrees[1].root == 'ID':
                     var_name = expr.subtrees[1].subtrees[0].root
                     inserted_item = vars_dict[var_name][0]
-                elif expr.subtrees[1].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                elif expr.subtrees[1].root in list_types:
                     inserted_item = eval_items[1][1]
                 else:
                     inserted_item = eval_items[1]
 
                 arr = Array(next(gen_var), IntSort(), item_type)
 
-                if expr.subtrees[0].root not in ['LIST_E', 'reverse', 'append', 'remove']:
+                if expr.subtrees[0].root not in list_types:
                     arr_value = And([arr[arr_len] == inserted_item] + [arr[i] == arr2[i] for i in range(arr_len)])
                 else:
                     arr_value = And([eval_items[0][0], arr[arr_len] == inserted_item] + [arr[i] == arr2[i] for i in range(arr_len)])
@@ -275,7 +293,7 @@ class VCGenerator(object):
                     arr2 = vars_dict[var_name][0]
                     arr_len = vars_dict[var_name][2]
                     item_type = arr2.range()
-                elif expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                elif expr.subtrees[0].root in list_types:
                     arr2 = eval_items[0][1]
                     arr_len = eval_items[0][3]
                     item_type = eval_items[0][2]
@@ -288,14 +306,14 @@ class VCGenerator(object):
                 if expr.subtrees[1].root == 'ID':
                     var_name = expr.subtrees[1].subtrees[0].root
                     removed_item = vars_dict[var_name][0]
-                elif expr.subtrees[1].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                elif expr.subtrees[1].root in list_types:
                     removed_item = eval_items[1][1]
                 else:
                     removed_item = eval_items[1]
 
                 arr = Array(next(gen_var), IntSort(), item_type)
                 # todo: edit this shit
-                if expr.subtrees[0].root not in ['LIST_E', 'reverse', 'append', 'remove']:
+                if expr.subtrees[0].root not in list_types:
                     arr_value = And([arr[arr_len] == removed_item] + [arr[i] == arr2[i] for i in range(arr_len)])
                 else:
                     arr_value = And([eval_items[0][0], arr[arr_len] == removed_item] + [arr[i] == arr2[i] for i in range(arr_len)])
@@ -309,13 +327,13 @@ class VCGenerator(object):
                 # ideally, there should be two subtree.. containing two integers
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
                 if len(eval_items) == 1:
-                    if is_array(eval_items[0]) or expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                    if is_array(eval_items[0]) or expr.subtrees[0].root in list_types:
                         jj = Int(next(gen_var))
                         index = Int(next(gen_var))
                         max_item = Int(next(gen_var))
-                        arr = eval_items[0][1] if expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove'] else eval_items[0]
+                        arr = eval_items[0][1] if expr.subtrees[0].root in list_types else eval_items[0]
                         max_vc = And(Exists(index, arr[index] == max_item), ForAll(jj, max_item >= arr[jj]))
-                        if expr.subtrees[0].root in ['LIST_E', 'reverse', 'append', 'remove']:
+                        if expr.subtrees[0].root in list_types:
                             max_vc = And(eval_items[0][0], max_vc)
                         return max_vc, max_item
                     return eval_items[0]
@@ -336,6 +354,42 @@ class VCGenerator(object):
                         return items_vc, max_vc
 
                     return max_vc
+                return eval_items[0]
+
+            elif expr.root == 'min':
+                if len(expr.subtrees) == 0:  # todo: should i remove this?
+                    return 0
+
+                # ideally, there should be two subtree.. containing two integers
+                eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
+                if len(eval_items) == 1:
+                    if is_array(eval_items[0]) or expr.subtrees[0].root in list_types:
+                        jj = Int(next(gen_var))
+                        index = Int(next(gen_var))
+                        min_item = Int(next(gen_var))
+                        arr = eval_items[0][1] if expr.subtrees[0].root in list_types else eval_items[0]
+                        min_vc = And(Exists(index, arr[index] == min_item), ForAll(jj, min_item >= arr[jj]))
+                        if expr.subtrees[0].root in list_types:
+                            min_vc = And(eval_items[0][0], min_vc)
+                        return min_vc, min_item
+                    return eval_items[0]
+
+                elif expr_is_int(expr.subtrees[0], eval_items[0]) and expr_is_int(expr.subtrees[1], eval_items[1]):
+                    item1 = eval_items[0]
+                    item2 = eval_items[1]
+                    items_vc = None
+                    if type(item1) is tuple:
+                        item1 = eval_items[0][1]
+                        items_vc = eval_items[0][0]
+                    if type(item2) is tuple:
+                        item2 = eval_items[1][1]
+                        items_vc = And(items_vc, eval_items[1][0])
+
+                    min_vc = simplify(If(item1 <= item2, item1, item2))
+                    if items_vc is not None:
+                        return items_vc, min_vc
+
+                    return min_vc
                 return eval_items[0]
 
             elif expr.root == 'index':
@@ -366,6 +420,130 @@ class VCGenerator(object):
                     return simplify(IndexOf(eval_items[0], eval_items[1], 0))
 
                 return -1
+
+            elif expr.root == 'all':
+                if len(expr.subtrees) == 1:
+                    eval_item = eval_expr(expr.subtrees[0])
+                    if is_array(eval_item) or expr.subtrees[0].root in list_types:
+                        arr = eval_item[1]
+                        arr_len = eval_item[3]
+                    elif expr.subtrees[0].root == 'ID':
+                        var_name = expr.subtrees[0].subtrees[0].root
+                        arr = vars_dict[var_name][0]
+                        arr_len = vars_dict[var_name][2]
+
+                    return And([arr[i] for i in range(0, arr_len)])
+                else:   # todo: should we raise an exception?
+                    raise ValueError('Syntax Error: wrong number of arguments in \'all\' function')
+
+            elif expr.root == 'any':
+                if len(expr.subtrees) == 1:
+                    eval_item = eval_expr(expr.subtrees[0])
+                    if is_array(eval_item) or expr.subtrees[0].root in list_types:
+                        arr = eval_item[1]
+                        arr_len = eval_item[3]
+                    elif expr.subtrees[0].root == 'ID':
+                        var_name = expr.subtrees[0].subtrees[0].root
+                        arr = vars_dict[var_name][0]
+                        arr_len = vars_dict[var_name][2]
+                    else:
+                        return False  # todo: what should we do if the argument is not a list?
+                    return Or([arr[i] for i in range(0, arr_len)])
+                else:   # todo: should we raise an exception?
+                    raise ValueError('Syntax Error: wrong number of arguments in \'all\' function')
+
+            elif expr.root == 'charAt':
+                # expects 2 arguments: a string and an index
+                if len(expr.subtrees) == 2:
+                    eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
+                    if is_string(eval_items[0]) and expr_is_int(expr.subtrees[1], eval_items[1]):
+                        final_vc = None
+                        start_index = eval_items[1]
+                        if type(eval_items[1]) is tuple:
+                            start_index = eval_items[1][1]
+                            final_vc = eval_items[1][0]
+                        if final_vc is not None:
+                            return simplify(And(final_vc)), simplify(SubString(eval_items[0], start_index, 1))
+                        return simplify(SubString(eval_items[0], start_index, 1))
+                return StringVal('')
+
+            elif expr.root == 'substring':
+                # expects 3 arguments: a string, a starting index and an ending index
+                if len(expr.subtrees) == 2:
+                    eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
+                    if is_string(eval_items[0]) and expr_is_int(expr.subtrees[1], eval_items[1]) and expr_is_int(expr.subtrees[2], eval_items[2]):
+                        final_vc = []
+                        start_index = eval_items[1]
+                        end_index = eval_items[2]
+                        if type(eval_items[1]) is tuple:
+                            start_index = eval_items[1][1]
+                            final_vc.append(eval_items[1][0])
+                        if type(eval_items[2]) is tuple:
+                            end_index = eval_items[2][1]
+                            final_vc.append(eval_items[2][0])
+                        if final_vc:
+                            return simplify(And(final_vc)), simplify(SubString(eval_items[0], start_index, end_index - start_index))
+                        return simplify(SubString(eval_items[0], start_index, end_index - start_index))
+                return StringVal('')
+
+            elif expr.root == 'LIST_COMPREHENSION':
+                if len(expr.subtrees) == 3:
+                    item3 = eval_expr(expr.subtrees[2])
+                    if expr.subtrees[1] == 'ID' and (is_array(item3) or expr.subtrees[2].root in list_types):
+                        total_vc = []
+                        if is_array(item3) or expr.subtrees[2].root in list_types:
+                            comp_vc, comp_lst, comp_lst_type, arr_len = item3
+                            total_vc.append(comp_vc)
+                        elif expr.subtrees[2].root == 'ID':
+                            arr_var_name = expr.subtrees[2].subtrees[0].root
+                            comp_lst = vars_dict[arr_var_name][0]
+                            comp_lst_type = vars_dict[arr_var_name][1]
+                            arr_len = vars_dict[arr_var_name][2]
+                        else:  # todo: raise exception
+                            arr = Array(next(gen_var), IntSort(), IntSort())
+                            return True, arr, IntSort(), 0
+
+                        id_backup = None
+                        id_backup_tagged = None
+                        var_name = expr.subtrees[1].subtrees[0].root
+                        if var_name in vars_dict:
+                            id_backup = vars_dict[var_name]
+                            # id_backup_tagged = vars_dict[var_name + '_']
+                        # as before, we assume that every list is mono-typed, i.e. it's items are of the same type
+                        # item_type is the type of the items of the list comprehension
+                        # first we evaluate a 'fake' expression to determine item_type in order to create a proper arr
+                        tmp_var_name = next(gen_var)
+                        vars_dict[var_name] = [create_var(comp_lst_type, tmp_var_name), comp_lst_type, 1]
+                        # vars_dict[var_name + '_'] = [create_var(comp_lst_type, tmp_var_name + '_'), comp_lst_type, 1]
+                        expr1_eval = eval_expr(expr.subtrees[0])
+                        item_type = get_expr_type(expr.subtrees[0], expr1_eval)
+                        arr = Array(next(gen_var), IntSort(), item_type)
+                        for i in range(0, arr_len):
+                            tmp_var_name = next(gen_var)
+                            # warning! if the item_type is an array we may get an un-wanted behaviour since we don't
+                            # know length of the array.. and it's set to 1 in the next line
+                            vars_dict[var_name] = [create_var(comp_lst_type, tmp_var_name), comp_lst_type, 1]
+                            # vars_dict[var_name + '_'] = [create_var(comp_lst_type, tmp_var_name + '_'), comp_lst_type, 1]
+                            expr1_eval = eval_expr(expr.subtrees[0])
+                            total_vc.append(comp_lst[i] == vars_dict[var_name][0])
+                            if type(expr1_eval) is tuple:
+                                total_vc.append(arr[i] == expr1_eval[1])
+                                total_vc.append(expr1_eval[0])
+                            else:
+                                total_vc.append(arr[i] == expr1_eval)
+
+                        # some dict clean up
+                        if id_backup is not None:
+                            vars_dict[var_name] = id_backup
+                            # vars_dict[var_name + '_'] = id_backup_tagged
+                        else:
+                            vars_dict.pop(var_name)
+                            # vars_dict.pop(var_name + '_')
+                        return And(total_vc), arr, item_type, arr_len
+
+                else:  # todo: raise exception
+                    arr = Array(next(gen_var), IntSort(), IntSort())
+                    return True, arr, IntSort(), 0
 
             return True
 

@@ -60,5 +60,22 @@ def append(lst, x):
     return mylist
 
 
-def charAt(str1, index):
-    return str1[index]
+def charAt(str1, index1):
+    return str1[index1]
+
+
+def index(items, item):
+    if item in items:
+        return items.index(item)
+    return -1
+
+
+def reverse(lst):
+    lst = lst[:]
+    lst.reverse()
+    return lst
+
+
+def substring(str1, start, end):
+    sub_str = str1[start,end]
+    return sub_str

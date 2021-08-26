@@ -8,12 +8,13 @@ from lib.parsing.silly import SillyLexer
 
 class PythonParser(object):
 
-    TOKENS = r"(if|else|elif|while)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+)" \
+    TOKENS = r" (if|else|elif|while|for|in)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+)" \
              r" (?P<ASSOP>[+\-*/]=) (?P<MULTDIV>[*/]) (?P<PLUSMINUS>[+\-])  :" \
              r" (?P<RPAREN>\)) (?P<LSPAREN>\[) (?P<RSPAREN>\]) " \
              r" (?P<NOT>not) (?P<FALSE>False) (?P<TRUE>True) " \
              r" (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<REMOVE>remove) (?P<MAX>max)" \
-             r" (?P<INDEX>index) (?P<SUBSTRING>substring) (?P<INT>int)" \
+             r" (?P<MIN>min) (?P<INDEX>index) (?P<SUBSTRING>substring) (?P<INT>int) (?P<STR>str) (?P<BOOLTYPE>bool) (?P<CHARAT>charAt) " \
+             r" (?P<ALL>all) (?P<ANY>any) (?P<SUM>sum)" \
              r" (?P<STR1>\'([^\n\r\"\'\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\'\\]|\\[rnt\"\'\\])+\") " \
              r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) " \
              r" (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) " \
@@ -56,18 +57,28 @@ class PythonParser(object):
     BLOCK4 ->  NEWLINE INDENT4 S1 | NEWLINE INDENT4 S1 BLOCK4
     BLOCK5 ->  NEWLINE INDENT5 S1 | NEWLINE INDENT5 S1 BLOCK5
 
-    E   ->   LPAREN E RPAREN | UN_REL E  |    E MULTDIV E   |   E PLUSMINUS E   | E RELOP E | INT LPAREN E RPAREN
-    E   ->   E BI_REL E | LIST_E | DEREF | FUNCS
+    E   ->   LPAREN E RPAREN | UN_REL E  |    E MULTDIV E   |   E PLUSMINUS E   | E RELOP E 
+    E   ->   INT LPAREN E RPAREN | STR LPAREN E RPAREN | BOOLTYPE LPAREN E RPAREN
+    E   ->   E BI_REL E | LIST_E | LIST_COMPREHENSION | DEREF | FUNCS
     E   ->   E0
-    FUNCS -> LEN_FUNC | REVERSE_FUNC | APPEND_FUNC | REMOVE_FUNC | MAX_FUNC | INDEX_FUNC | SUBSTRING_FUNC
+    
+    FUNCS -> LEN_FUNC | REVERSE_FUNC | APPEND_FUNC | REMOVE_FUNC | MAX_FUNC | MIN_FUNC | INDEX_FUNC | SUBSTRING_FUNC
+    FUNCS -> SUM_FUNC | CHARAT_FUNC | ALL_FUNC | ANY_FUNC
+    
     LEN_FUNC   -> LEN LPAREN E RPAREN
     INV_FUNC   -> INV LPAREN INV_ARGS RPAREN
     REVERSE_FUNC -> REVERSE CALL
     APPEND_FUNC -> APPEND CALL
     REMOVE_FUNC -> REMOVE CALL
     MAX_FUNC -> MAX CALL
+    MIN_FUNC -> MIN CALL
     INDEX_FUNC -> INDEX CALL
     SUBSTRING_FUNC -> SUBSTRING CALL
+    SUM_FUNC -> SUM CALL
+    CHARAT_FUNC -> CHARAT CALL
+    ALL_FUNC -> ALL CALL
+    ANY_FUNC -> ANY CALL
+    
     E0  ->   ID   |   NUM   |   STR   | BOOL
     STR ->   STR1 | STR2
     BOOL -> TRUE | FALSE
@@ -77,6 +88,7 @@ class PythonParser(object):
     CALL   -> LPAREN FUNC_ARGS RPAREN | LPAREN RPAREN
     LIST_E -> LSPAREN LIST_ITEMS RSPAREN | LSPAREN RSPAREN
     LIST_ITEMS -> E | E COMMA LIST_ITEMS
+    LIST_COMPREHENSION -> LSPAREN E for ID in E RSPAREN
     FUNC_ARGS  -> LIST_ITEMS
     DEREF  -> ID LSPAREN E RSPAREN
     INV_ARGS -> ASSIGN | ASSIGN COMMA INV_ARGS
@@ -161,7 +173,7 @@ class PythonParser(object):
                 elif t.subtrees[0].root == 'LPAREN':
                     return self.postprocess(t.subtrees[1])
             elif len(t.subtrees) == 4:
-                if t.subtrees[0].root == 'INT':
+                if t.subtrees[0].root in ['INT', 'STR', 'BOOLTYPE']:
                     return self.postprocess(t.subtrees[2])
 
         elif t.root in ['BI_REL', 'UN_REL']:
@@ -220,9 +232,14 @@ class PythonParser(object):
                 lst = lst if len(args.subtrees) == 1 else lst + self.tree_to_list(args.subtrees[2])
                 return Tree(parent_data, lst)
 
-        elif t.root in ['REVERSE_FUNC', 'APPEND_FUNC', 'REMOVE_FUNC', 'MAX_FUNC', 'INDEX_FUNC', 'SUBSTRING_FUNC']:
-            return self.postprocess(t.subtrees[1], parent_data=t.subtrees[0].subtrees[0].root)
+        elif t.root == 'LIST_COMPREHENSION':
+            if len(t.subtrees) == 7:
+                return Tree(t.root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3]), self.postprocess(t.subtrees[5])])
 
+        elif t.root in ['REVERSE_FUNC', 'APPEND_FUNC', 'REMOVE_FUNC', 'MAX_FUNC', 'MIN_FUNC', 'INDEX_FUNC',
+                        'SUBSTRING_FUNC', 'SUM_FUNC', 'CHARAT_FUNC', 'ALL_FUNC', 'ANY_FUNC']:
+            return self.postprocess(t.subtrees[1], parent_data=t.subtrees[0].subtrees[0].root)
+        '    LIST_COMPREHENSION -> LSPAREN E for ID in E RSPAREN'
         return Tree(t.root, [self.postprocess(s) for s in t.subtrees])
     
 
@@ -289,18 +306,25 @@ if __name__ == '__main__':
     append - done
     remove
     sort ??
-    sum
+    
     find ==> Exists(jj, arr[jj] == 5)
     index ==> IndexOf() - done
-    substring ==> IsSubset(a, b)  ,  SubString()
-    charAt ==> SubString(str, i, 1)
     max ==> use max = If(x > y, x, y) - done
+    
+    -----
+    min ==> done
+    substring ==> IsSubset(a, b)  ,  SubString(str,begin,end - begin)
+    charAt ==> SubString(str, i, 1)
+    all ==> foreach
+    any ==> exists
+    list comprehension
+    sum
     """
 
     # ast = PythonParser()("while i < n and n >= 0:\n"
     #                      "\t__inv__(i=i, n=n, x=x, myList=myList)\n"
     #                      "\tx += 1")
-    ast = PythonParser()(read_source_file("benchmarks/integers_benchmark/test3_ints.py"))
+    ast = PythonParser()(read_source_file("benchmarks/test_list_comp.py"))
 
     if ast:
         print(">> Valid program.")

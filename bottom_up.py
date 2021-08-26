@@ -414,6 +414,9 @@ class BottomUp:
                 if 'sort mismatch' in err.args[0]:
                     continue
                 raise err
+            except Exception as err:  # todo: ask about if we should do this or not
+                continue
+
             if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
                 continue
             t = simplify(inv)

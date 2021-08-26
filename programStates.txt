@@ -1,4 +1,8 @@
-x int 60y int 24
-x int 36y int 24
-x int 12y int 24
-x int 12y int 12
+myList list [1874, 4879, 4987, 6541, 154, 321, 156, 987]count int 0limiter int 5616n int 8i int 0
+myList list [1874, 4879, 4987, 6541, 154, 321, 156, 987]count int 0limiter int 5616n int 8i int 1
+myList list [1874, 4879, 4987, 6541, 154, 321, 156, 987]count int 0limiter int 5616n int 8i int 2
+myList list [1874, 4879, 4987, 6541, 154, 321, 156, 987]count int 0limiter int 5616n int 8i int 3
+myList list [1874, 4879, 4987, 6541, 154, 321, 156, 987]count int 1limiter int 5616n int 8i int 4
+myList list [1874, 4879, 4987, 6541, 154, 321, 156, 987]count int 1limiter int 5616n int 8i int 5
+myList list [1874, 4879, 4987, 6541, 154, 321, 156, 987]count int 1limiter int 5616n int 8i int 6
+myList list [1874, 4879, 4987, 6541, 154, 321, 156, 987]count int 1limiter int 5616n int 8i int 7
