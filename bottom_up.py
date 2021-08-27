@@ -1,5 +1,3 @@
-from z3 import *
-
 from lib.adt.tree import Tree
 from lib.parsing.earley.earley import Grammar
 from lib.adt.tree.walk import PreorderWalk
@@ -9,15 +7,17 @@ from copy import deepcopy
 from VC_Generation import *
 import multiprocessing
 from time import time
+from z3.z3types import Z3Exception
 
 
-
-def check_passing(generator, ast_chunks, x_):  # TODO: Rename
+def check_passing(generator, ast_chunks, x_, limit=-1):  # TODO: Rename
     res = []
     s_ = Solver()
     x_ast = generator.parser(x_)
     x = generator.generate_vc(x_ast)[0]
     for y_ in ast_chunks:
+        if time() > limit > 0:
+            return []
         s_.reset()
         ast = generator.parser(y_)
         y = generator.generate_vc(ast)[0]
@@ -76,10 +76,17 @@ class BottomUp:
                              "PLUSMINUS": ["+", "-"],
                              "MULTDIV": ["*", "/"],
                              "ASSOP": ["+=", "-=", "*=", "/="],
-                             "AND": ["and"],
-                             "OR": ["or"],
-                             "NOT": ["not"]
                              }
+        self.funcs_id = {"AND": ["and"],
+                         "OR": ["or"],
+                         "NOT": ["not"],
+                         "LEN": ["len"],
+                         "REVERSE": ["reverse"],
+                         "APPEND": ["append"],
+                         "REMOVE": ["remove"],
+                         "MAX": ["max"],
+                         "INDEX": ["index"],
+                         }
         self.p = [rule.rhs[0] for rule in self.grammar["VAR"]]
         self.program_states_file = prog_states_file  # Where __inv__ prints
         self.program_states = list()  #
@@ -120,6 +127,9 @@ class BottomUp:
             return "".join(as_list[:index]) + var + "".join(as_list[index:])
         batch = list()
         local_rev_dic = deepcopy(self.reverse_dict)
+        for key in self.funcs_id.keys():
+            local_rev_dic.setdefault(key, self.funcs_id[key])
+            local_rev_dic[key] = self.funcs_id[key]
         for key in self.reverse_dict.keys():
             local_rev_dic[key].extend(self.rev_dict.setdefault(key, []))
         for key in self.used_tokens_dict.keys():
@@ -198,7 +208,6 @@ class BottomUp:
         num = max(multiprocessing.cpu_count() - 1, 8)
         print("num CPUS: %d" % num)
         while len(batch) > 1:
-            print("Checking timeout: if {} > {} > 0".format(time(), timeout))
             if time() > timeout > 0:
                 return []
             # start_while = time()
@@ -217,7 +226,8 @@ class BottomUp:
                 # proc.start()
                 # processes.append(proc)
                 # res = pool.apply_async(remove_equal, [x, chunk, z3_to_str])
-                res = pool.apply_async(check_passing, [VCGenerator(vars_noz3=vars_dict, should_tag=False), chunk, x])
+                res = pool.apply_async(check_passing,
+                                       [VCGenerator(vars_noz3=vars_dict, should_tag=False), chunk, x, timeout])
                 async_results.append(res)
 
             pool.close()
@@ -390,7 +400,6 @@ class BottomUp:
         lst = []
         for code in batch:
             if self.start_time:
-                print("Checking timeout: if {} - {} >= 0".format(time(), self.start_time + self.timeout))
                 if time() - (self.start_time + self.timeout) >= 0:
                     return []
             if type(code) is not str:
@@ -410,7 +419,7 @@ class BottomUp:
                     continue
                 else:
                     raise err
-            except z3.z3types.Z3Exception as err:
+            except Z3Exception as err:
                 if 'sort mismatch' in err.args[0]:
                     continue
                 raise err
@@ -457,10 +466,9 @@ class BottomUp:
         i = 0
         # ehh = 0
         while True:
-            print("Checking timeout: if {} - {} <= 0".format(time(), self.start_time + self.timeout))
             if self.start_time:
                 if time() - (self.start_time + self.timeout) >= 0:
-                    return "timed out"
+                    return
             i = i + 1
             self.z3_to_str = dict()
             curr_batch = self.grow()
@@ -472,10 +480,9 @@ class BottomUp:
             # print(self.reverse_dict)
             # z3_batch = list(self.vc_gen.generate_vc(self.vc_gen.parser(b.word)) for b in curr_batch)
             z3_batch = self.batch_to_z3(curr_batch)
-            print("Checking timeout: if {} - {} <= 0".format(time(), self.start_time + self.timeout))
             if self.start_time:
                 if time() - (self.start_time + self.timeout) >= 0:
-                    return "timed out"
+                    return
             print("converted %d:" % len(z3_batch))
             print(z3_batch)
             if self.start_time:
@@ -483,10 +490,9 @@ class BottomUp:
                                                                 self.start_time + self.timeout)
             else:
                 z3_batch = self.elim_equivalents_multi_proccess(self.strings, self.vc_gen, self.vars_dict_multi)
-            print("Checking timeout: if {} - {} <= 0".format(time(), self.start_time + self.timeout))
             if self.start_time:
                 if time() - (self.start_time + self.timeout) >= 0:
-                    return "timed out"
+                    return
             print("Eliminated\nNew Size: %d" % len(z3_batch))
             for inv in z3_batch:
                 if self.check_sat(inv):

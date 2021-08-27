@@ -2,6 +2,7 @@ import argparse
 from LoopInvSynth import LoopInvSynth
 from bottom_up import *
 import multiprocessing
+import os
 # import timeout_decorator
 import sys
 
@@ -61,9 +62,13 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
     # print(bt.used_tokens_dict)
     solver = Solver()
     for b in bt.bottom_up():
-        if b == "timed out":
-            print("timed out")
-            return False
+        # if b == "timed out":
+        #     sys.stdout = back_up
+        #     print("timed out")
+        #     if res_dict:
+        #         res_dict["result"] = b
+        #     print("res_dict['result']: {}".format(res_dict["result"]))
+        #     return False
         inv, inv_tagged = b
         lst = [Implies(And(pre_cond, pre_loop), inv_tagged),
                Implies(And(inv, loop_cond, loop_body), inv_tagged),
@@ -73,12 +78,17 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
             sys.stdout = back_up
             print("Found inv: {}".format(inv))
             if res_dict:
-                res_dict["result"] = inv
+                res_dict["result"] = ("Found inv: {}".format(inv))
+            # print("res_dict['result']: {}".format(res_dict["result"]))
             return inv
         solver.reset()
+    sys.stdout = back_up
+    if res_dict:
+        res_dict["result"] = "No Inv found or timed out"
+    return False
 
 
-LOCAL_TIMEOUT = 60 * 7
+LOCAL_TIMEOUT = 60 * 8
 
 
 class TestIntCodes:
@@ -228,7 +238,7 @@ class TestIntCodes:
             if not t:
                 message = "Failed"
             else:
-                message = "Passed"
+                message = t
             if err:
                 message = err
             print(test.__name__ + ": " + str(message))
@@ -250,13 +260,17 @@ if __name__ == '__main__':
                         help="The name of the file containing pre and post condition on the input program")
     parser.add_argument('--tests', help="Run the unittests.",
                         action='store_true')
+    parser.add_argument('-t', '--time-out', help="Max run time in minutes(7 Minutes default)\n"
+                                                 "Max run time for each test in case --tests was supplied",
+                        type=float, default=8.00, dest="timeout")
 
     args = parser.parse_args()
 
     if args.tests:
-        TestIntCodes().run()
+        from tests import run_tests
+        run_tests(timeout=args.timeout)
         exit(0)
     if not args.program_file or not args.grammar_file:
         print("error: the following arguments are required: --program/-p, --grammar/-g  OR --tests")
         exit(1)
-    run(args.program_file, args.grammar_file, args.conds_file, timeout=LOCAL_TIMEOUT)
+    run(args.program_file, args.grammar_file, args.conds_file, timeout=args.timeout * 60)
