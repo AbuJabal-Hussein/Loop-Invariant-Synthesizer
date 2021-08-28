@@ -28,14 +28,11 @@ The conditions files must follow the following format:
 
     pre_cond : <cond>
     post_cond : <cond>
-For example: 
-
-    pre_cond : <cond>
-    post_cond : <cond>
-
+Examples: 
+1) 
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTk5MTczNzQxMiw4MjM1MTU1MzQsOTQ2Mj
+eyJoaXN0b3J5IjpbLTQzOTI4MjU3MSw4MjM1MTU1MzQsOTQ2Mj
 E4NzA2LDE0NTA1NDU5MTIsMTUzNTc3NzU5MiwxOTAyODI5ODI3
 LDE0ODg5NzM5MDcsLTExMjc2MTM2OTgsLTExNzk2NTE3OCwtMT
 U0ODYwNTg2NF19
