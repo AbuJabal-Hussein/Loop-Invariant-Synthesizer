@@ -9,12 +9,15 @@ It is possible to provide a timeout for each input python program run, by adding
 This option can be added regardless of run mode, meaning it can be added whether you are running the test benchmarks or using the tool with your personal inputs for your own run.
 
 # The Input Format
-To successfully run the tool on a python code, you need to provide the python code you wish to synthesis, the grammar (which must be a sub Grammar of the grammar found in syntax.py [^1] 
+To successfully run the tool on a python code, you need to provide the python code you wish to synthesis, the grammar (which must be a sub Grammar of the grammar found in [syntax.py](https://github.com/AbuJabal-Hussein/Loop-Invariant-Synthesizer/blob/dev/syntax.py) [^1] ), and conditions file, which can be used to prove properties. 
+To successfully run: 
+
+    python main.py 
 
 
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTM2OTY1MTM5MywxNDUwNTQ1OTEyLDE1Mz
+eyJoaXN0b3J5IjpbLTQ2MDk5NzgwMiwxNDUwNTQ1OTEyLDE1Mz
 U3Nzc1OTIsMTkwMjgyOTgyNywxNDg4OTczOTA3LC0xMTI3NjEz
 Njk4LC0xMTc5NjUxNzgsLTE1NDg2MDU4NjRdfQ==
 -->
