@@ -5,9 +5,9 @@ This is the final project of the Software Synthesis and Automated Reasoning cour
 The script for running the tests benchmarks can be invoked by running the main file and adding --tests to the script.
 
 # Timeout Option
-It is possible to provide a timeout for each input python program run, whether it 
+It is possible to provide a timeout for each input python program run, whether
 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTExMjc2MTM2OTgsLTExNzk2NTE3OCwtMT
-U0ODYwNTg2NF19
+eyJoaXN0b3J5IjpbMTQ4ODk3MzkwNywtMTEyNzYxMzY5OCwtMT
+E3OTY1MTc4LC0xNTQ4NjA1ODY0XX0=
 -->
