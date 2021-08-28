@@ -24,11 +24,18 @@ The input program needs to have at most 1 loop. A call to \___inv_\__() must be 
 As mentioned before, it must be a sub grammar of the grammar found in synatx.py.
 _Make sure it isn't written as string (no quotes: ' or  "). Take a look at [grammar.py](https://github.com/AbuJabal-Hussein/Loop-Invariant-Synthesizer/blob/dev/benchmarks/integers_benchmark/grammar) [^1] for a clearer image._
 ### The Conditions File:
+The conditions files must follow the following format:
 
+    pre_cond : <cond>
+    post_cond : <cond>
+For example: 
+
+    pre_cond : <cond>
+    post_cond : <cond>
 
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTE1MjU0MDMyOCw4MjM1MTU1MzQsOTQ2Mj
+eyJoaXN0b3J5IjpbMTk5MTczNzQxMiw4MjM1MTU1MzQsOTQ2Mj
 E4NzA2LDE0NTA1NDU5MTIsMTUzNTc3NzU5MiwxOTAyODI5ODI3
 LDE0ODg5NzM5MDcsLTExMjc2MTM2OTgsLTExNzk2NTE3OCwtMT
 U0ODYwNTg2NF19
