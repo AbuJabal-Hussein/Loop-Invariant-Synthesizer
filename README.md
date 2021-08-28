@@ -29,10 +29,15 @@ The conditions files must follow the following format:
     pre_cond : <cond>
     post_cond : <cond>
 Examples: 
-1) 
+
+1)  '''    
+    pre_cond : True
+    post_cond : all([myList[i] == str1[i] for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) and (myList[47] == 'program')
+'''
+
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTQzOTI4MjU3MSw4MjM1MTU1MzQsOTQ2Mj
+eyJoaXN0b3J5IjpbMTE5MzU3NjEyMyw4MjM1MTU1MzQsOTQ2Mj
 E4NzA2LDE0NTA1NDU5MTIsMTUzNTc3NzU5MiwxOTAyODI5ODI3
 LDE0ODg5NzM5MDcsLTExMjc2MTM2OTgsLTExNzk2NTE3OCwtMT
 U0ODYwNTg2NF19
