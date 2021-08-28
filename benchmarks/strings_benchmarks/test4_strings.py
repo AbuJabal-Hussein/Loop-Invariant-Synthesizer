@@ -1,9 +1,11 @@
-from utilities.inv import __inv__, index, reverse
+from utilities.inv import __inv__, charAt, append, substring
 
-str1 = "This program splits this sentence into words and put them in a list"
+str1 = "This program converts this sentence into a list"
 myList = []
 i = 0
-j = 0
 strLen = len(str1)
 while i < strLen:
-    if
+    __inv__(str1=str1, myList=myList, i=i, strLen=strLen)
+    myList = append(myList, charAt(str1, i))
+    i += 1
+myList = append(myList, substring(str1, 5, 12))

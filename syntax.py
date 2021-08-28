@@ -9,12 +9,12 @@ from lib.parsing.silly import SillyLexer
 class PythonParser(object):
 
     TOKENS = r" (if|else|elif|while|for|in)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+)" \
-             r" (?P<ASSOP>[+\-*/]=) (?P<MULTDIV>[*/]) (?P<PLUSMINUS>[+\-])  :" \
+             r" (?P<ASSOPPOWER>(\*\*=)) (?P<ASSOP>[+\-*/]=) (?P<POWER>(\*\*)) (?P<MULTDIV>[*/%]) (?P<PLUSMINUS>[+\-])  :" \
              r" (?P<RPAREN>\)) (?P<LSPAREN>\[) (?P<RSPAREN>\]) " \
              r" (?P<NOT>not) (?P<FALSE>False) (?P<TRUE>True) " \
              r" (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<REMOVE>remove) (?P<MAX>max)" \
-             r" (?P<MIN>min) (?P<INDEX>index) (?P<SUBSTRING>substring) (?P<INT>int) (?P<STR>str) (?P<BOOLTYPE>bool) (?P<CHARAT>charAt) " \
-             r" (?P<ALL>all) (?P<ANY>any) (?P<SUM>sum)" \
+             r" (?P<MIN>min) (?P<INDEX>index) (?P<SUBSTRING>substring) (?P<INT>int) (?P<BOOLTYPE>bool) (?P<CHARAT>charAt) " \
+             r" (?P<ALL>all) (?P<ANY>any) (?P<SUM>sum) (?P<RANGE>range)" \
              r" (?P<STR1>\'([^\n\r\"\'\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\'\\]|\\[rnt\"\'\\])+\") " \
              r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) " \
              r" (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) " \
@@ -24,7 +24,7 @@ class PythonParser(object):
     S   ->   S1 | S1 NEWLINE | S1 NEWLINE INDENT   |  E  |  S1 NEWLINE S
     
     
-    S1  ->   ID = E   | IF_S5 |  IF_S4 | IF_S3 | IF_S2 | IF_S  | WHILE_S5 | WHILE_S4 | WHILE_S3 | WHILE_S2 | WHILE_S  |     ID ASSOP E   |   DEREF = E   |   INV_FUNC | FUNCS
+    S1  ->   ID = E   | IF_S5 |  IF_S4 | IF_S3 | IF_S2 | IF_S  | WHILE_S5 | WHILE_S4 | WHILE_S3 | WHILE_S2 | WHILE_S | ID ASSOP E  | ID ASSOPPOWER E | DEREF = E  |  INV_FUNC | FUNCS
     S1  ->   LPAREN S RPAREN
     
     IF_S -> if E : BLOCK | if E : BLOCK NEWLINE ELSE_S | if E : BLOCK NEWLINE ELIF_S
@@ -57,13 +57,13 @@ class PythonParser(object):
     BLOCK4 ->  NEWLINE INDENT4 S1 | NEWLINE INDENT4 S1 BLOCK4
     BLOCK5 ->  NEWLINE INDENT5 S1 | NEWLINE INDENT5 S1 BLOCK5
 
-    E   ->   LPAREN E RPAREN | UN_REL E  |    E MULTDIV E   |   E PLUSMINUS E   | E RELOP E 
-    E   ->   INT LPAREN E RPAREN | STR LPAREN E RPAREN | BOOLTYPE LPAREN E RPAREN
+    E   ->   LPAREN E RPAREN | UN_REL E  |  E POWER E  |  E MULTDIV E   |   E PLUSMINUS E   | E RELOP E 
+    E   ->   INT LPAREN E RPAREN |  BOOLTYPE LPAREN E RPAREN
     E   ->   E BI_REL E | LIST_E | LIST_COMPREHENSION | DEREF | FUNCS
     E   ->   E0
     
     FUNCS -> LEN_FUNC | REVERSE_FUNC | APPEND_FUNC | REMOVE_FUNC | MAX_FUNC | MIN_FUNC | INDEX_FUNC | SUBSTRING_FUNC
-    FUNCS -> SUM_FUNC | CHARAT_FUNC | ALL_FUNC | ANY_FUNC
+    FUNCS -> SUM_FUNC | CHARAT_FUNC | ALL_FUNC | ANY_FUNC | RANGE_FUNC
     
     LEN_FUNC   -> LEN LPAREN E RPAREN
     INV_FUNC   -> INV LPAREN INV_ARGS RPAREN
@@ -78,6 +78,7 @@ class PythonParser(object):
     CHARAT_FUNC -> CHARAT CALL
     ALL_FUNC -> ALL CALL
     ANY_FUNC -> ANY CALL
+    RANGE_FUNC -> RANGE CALL
     
     E0  ->   ID   |   NUM   |   STR   | BOOL
     STR ->   STR1 | STR2
@@ -138,7 +139,7 @@ class PythonParser(object):
         elif t.root == 'S1' and len(t.subtrees) == 3:
             if t.subtrees[1].root == '=':
                 return Tree(t.subtrees[1].root, [self.postprocess(t.subtrees[0]), self.postprocess(t.subtrees[2])])
-            elif t.subtrees[1].root == 'ASSOP':
+            elif t.subtrees[1].root in ['ASSOP', 'ASSOPPOWER']:
                 return Tree(t.subtrees[1].subtrees[0].root, [self.postprocess(t.subtrees[0]), self.postprocess(t.subtrees[2])])
             elif t.subtrees[1].root == 'S':
                 return self.postprocess(t.subtrees[1])
@@ -168,12 +169,12 @@ class PythonParser(object):
             if len(t.subtrees) == 2:
                 return Tree(t.subtrees[0].root, [self.postprocess(t.subtrees[1])])
             elif len(t.subtrees) == 3:
-                if t.subtrees[1].root in ['MULTDIV', 'PLUSMINUS', 'RELOP', 'BI_REL']:
+                if t.subtrees[1].root in ['MULTDIV', 'PLUSMINUS', 'RELOP', 'BI_REL', 'POWER']:
                     return Tree(t.subtrees[1].subtrees[0].root, [self.postprocess(t.subtrees[0]), self.postprocess(t.subtrees[2])])
                 elif t.subtrees[0].root == 'LPAREN':
                     return self.postprocess(t.subtrees[1])
             elif len(t.subtrees) == 4:
-                if t.subtrees[0].root in ['INT', 'STR', 'BOOLTYPE']:
+                if t.subtrees[0].root in ['INT', 'BOOLTYPE']:
                     return self.postprocess(t.subtrees[2])
 
         elif t.root in ['BI_REL', 'UN_REL']:
@@ -237,9 +238,8 @@ class PythonParser(object):
                 return Tree(t.root, [self.postprocess(t.subtrees[1]), self.postprocess(t.subtrees[3]), self.postprocess(t.subtrees[5])])
 
         elif t.root in ['REVERSE_FUNC', 'APPEND_FUNC', 'REMOVE_FUNC', 'MAX_FUNC', 'MIN_FUNC', 'INDEX_FUNC',
-                        'SUBSTRING_FUNC', 'SUM_FUNC', 'CHARAT_FUNC', 'ALL_FUNC', 'ANY_FUNC']:
+                        'SUBSTRING_FUNC', 'SUM_FUNC', 'CHARAT_FUNC', 'ALL_FUNC', 'ANY_FUNC', 'RANGE_FUNC']:
             return self.postprocess(t.subtrees[1], parent_data=t.subtrees[0].subtrees[0].root)
-        '    LIST_COMPREHENSION -> LSPAREN E for ID in E RSPAREN'
         return Tree(t.root, [self.postprocess(s) for s in t.subtrees])
     
 
@@ -319,6 +319,12 @@ if __name__ == '__main__':
     any ==> exists
     list comprehension
     sum
+    
+    +++++
+    >>>r
+    "bb"
+    >>>Replace(r,'b','d')
+    Replace("bb", "b", "d")
     """
 
     # ast = PythonParser()("while i < n and n >= 0:\n"

@@ -1,3 +1,8 @@
+lll = range(5)
+lll2 = range(2, 5)
+lll3 = [i + 3 for i in range(4)]
+lll4 = [i + 3 for i in lll]
+lll5 = [i + 3 for i in range(3, 6)]
 miini = min([1, 4, 5, 2])
 lst1 = [i + 7 for i in [0, 3, 7, 9, 7]]
 num1 = len(lst1)
@@ -15,7 +20,9 @@ hany2 = any([a == lst1, x > 4, True, False])
 st1 = 'asdasd'
 c = charAt(st1, 2)
 lstsum1 = sum([1, 2, 3, 4])
-lstsum2 = sum(lst1) + 7
+lstsum2 = sum(lst1) ** 2 + 7
+lstsum2 *= sum(lst1) ** 2 + 7
+lstsum2 **= sum(lst1) ** 2 + 7
 lstsum3 = sum([i * i for i in [1, 2, 3, 4, 5, 6, 7, 8, 9]])
 lstsum4 = sum(1, 2, 3, 4)
 lstsum5 = sum(append([i * i for i in [1, 2, 3, 4, 5, 6, 7, 8, 9]], 55))

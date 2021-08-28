@@ -1,4 +1,4 @@
-from utilities.inv import __inv__, append
+from utilities.inv import __inv__
 
 myList = [1874, 4879, 4987, 6541, 154, 321, 156, 987]
 count = 0

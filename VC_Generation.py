@@ -6,6 +6,7 @@ from z3 import Int, ForAll, Implies, Not, And, Or, Solver, unsat, sat, IntSort, 
 
 OP = {'+': operator.add, '-': operator.sub,
       '*': operator.mul, '/': (lambda a, b: a / b),
+      '%': operator.mod, '**': operator.pow,
       '!=': operator.ne, '>': operator.gt, '<': operator.lt,
       '<=': operator.le, '>=': operator.ge, '==': operator.eq,
       'AND': And, 'OR': Or}
@@ -63,7 +64,7 @@ class VCGenerator(object):
                 num += 1
 
         gen_var = gen_name()
-        list_types = ['LIST_E', 'LIST_COMPREHENSION', 'reverse', 'append', 'remove']
+        list_types = ['LIST_E', 'LIST_COMPREHENSION', 'reverse', 'append', 'remove', 'range']
         bool_types = ['BOOL', 'all', 'any']
         string_types = ['STR', 'charAt', 'substring']
 
@@ -177,7 +178,7 @@ class VCGenerator(object):
                         return And(eval_rhs[0], OP['=='](eval_lhs, eval_rhs[1]))
                     return OP['=='](eval_lhs, eval_rhs)
 
-            elif expr.root in ['+=', '-=', '*=', '/=']:
+            elif expr.root in ['+=', '-=', '*=', '/=', '**=']:
                 expr1 = expr.subtrees[0]
                 expr2 = expr.subtrees[1]
                 eval_lhs = eval_expr(expr1, tagged_id=True)
@@ -189,7 +190,7 @@ class VCGenerator(object):
                 if type(item_rhs) is tuple:
                     item_rhs = eval_rhs[1]
                     items_vc = eval_rhs[0]
-                assign_vc = OP['=='](eval_lhs, OP[expr.root[0]](eval_lhs, item_rhs))
+                assign_vc = OP['=='](eval_lhs, OP[expr.root[:-1]](eval_lhs, item_rhs))
                 if items_vc is not None:
                     assign_vc = And(items_vc, assign_vc)
                 return assign_vc
@@ -603,6 +604,23 @@ class VCGenerator(object):
 
                 return eval_items[0]  # todo: raise exception
 
+            elif expr.root == 'range':
+                # warning! we only accept integer values as arguments.. i.e. no variables
+                if len(expr.subtrees) == 1 and expr.subtrees[0].root == 'NUM':
+                    arr_len = expr.subtrees[0].subtrees[0].root
+                    arr = Array(next(gen_var), IntSort(), IntSort())
+                    arr_vc = And([arr[j] == j for j in range(arr_len)])
+                    return arr_vc, arr, IntSort(), arr_len
+                elif len(expr.subtrees) == 2 and expr.subtrees[0].root == 'NUM' and expr.subtrees[1].root == 'NUM':
+                    start_index = expr.subtrees[0].subtrees[0].root
+                    end_index = expr.subtrees[1].subtrees[0].root
+                    arr = Array(next(gen_var), IntSort(), IntSort())
+                    arr_vc = And([arr[j] == j for j in range(start_index, end_index)])
+                    return arr_vc, arr, IntSort(), end_index - start_index
+                else:  #todo: raise exception
+                    arr = Array(next(gen_var), IntSort(), IntSort())
+                    return True, arr, IntSort(), 0
+
             return True
 
         def construct_tr(t, collected_vars=None):
@@ -649,7 +667,7 @@ class VCGenerator(object):
                 elif len(t.subtrees) == 2:
                     return And(construct_tr(t.subtrees[0], collected_vars=collected_vars), construct_tr(t.subtrees[1], collected_vars=collected_vars))
 
-            elif t.root in ['=', '+=', '-=', '*=', '/=', '>', '<', '>=', "<="]:
+            elif t.root in ['=', '+=', '-=', '*=', '/=', '**=', '>', '<', '>=', "<="]:
                 return eval_expr(t, collected_vars=collected_vars)
 
             # function call statements does not affect the program, assuming that they don't have side effects on the program variables

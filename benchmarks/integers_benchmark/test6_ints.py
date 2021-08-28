@@ -7,6 +7,7 @@ rowsNum = len(mat)
 colsNum = len(mat[0])
 
 while i < rowsNum:
+    __inv__(mat=mat, i=i, rowsNum=rowsNum, colsNum=colsNum)
     mat[i] = [mat[i][j] / mat[i][0] for j in [0, 1, 2]]  # consider adding range(0, colsNum)
     i += 1
 
