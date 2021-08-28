@@ -16,11 +16,12 @@ To successfully run:
 
     python main.py --program <input program file> --grammar <Grammar file> --conditions <conditions file> [-t NUM]
 ### The input program:
-The input program needs to have at most 1 loop. a call to __inv__()
+The input program needs to have at most 1 loop. A call to \___inv_\__() must be added, while the arguments are each variable used as follows:
+		Assuming 
 
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTMyNzAwNTI1NywxNDUwNTQ1OTEyLDE1Mz
-U3Nzc1OTIsMTkwMjgyOTgyNywxNDg4OTczOTA3LC0xMTI3NjEz
-Njk4LC0xMTc5NjUxNzgsLTE1NDg2MDU4NjRdfQ==
+eyJoaXN0b3J5IjpbMzEwNDM0MDU4LDE0NTA1NDU5MTIsMTUzNT
+c3NzU5MiwxOTAyODI5ODI3LDE0ODg5NzM5MDcsLTExMjc2MTM2
+OTgsLTExNzk2NTE3OCwtMTU0ODYwNTg2NF19
 -->
