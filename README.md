@@ -22,12 +22,12 @@ The input program needs to have at most 1 loop. A call to \___inv_\__() must be 
     __inv__(a=a, b=b, c=c)
 ### The grammar:
 As mentioned before, it must be a sub grammar of the grammar found in synatx.py.
-_Make sure it isn't written as string. (no quotes: ' or  "), take a look at [grammar.py](https://github.com/AbuJabal-Hussein/Loop-Invariant-Synthesizer/blob/dev/benchmarks/integers_benchmark/grammar) for _
+_Make sure it isn't written as string (no quotes: ' or  "). Take a look at [grammar.py](https://github.com/AbuJabal-Hussein/Loop-Invariant-Synthesizer/blob/dev/benchmarks/integers_benchmark/grammar) [^1] for a clearer image._
 
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE4MTc2NjA4MDcsOTQ2MjE4NzA2LDE0NT
-A1NDU5MTIsMTUzNTc3NzU5MiwxOTAyODI5ODI3LDE0ODg5NzM5
-MDcsLTExMjc2MTM2OTgsLTExNzk2NTE3OCwtMTU0ODYwNTg2NF
-19
+eyJoaXN0b3J5IjpbODIzNTE1NTM0LDk0NjIxODcwNiwxNDUwNT
+Q1OTEyLDE1MzU3Nzc1OTIsMTkwMjgyOTgyNywxNDg4OTczOTA3
+LC0xMTI3NjEzNjk4LC0xMTc5NjUxNzgsLTE1NDg2MDU4NjRdfQ
+==
 -->
