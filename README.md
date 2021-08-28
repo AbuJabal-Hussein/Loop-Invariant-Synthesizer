@@ -19,9 +19,13 @@ To successfully run:
 The input program needs to have at most 1 loop. A call to \___inv_\__() must be added, while the arguments are each variable used as follows:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; _- Assuming a,b,c are the used variables in the code -_
 
+    __inv__(a=a, b=b, c=c)
+### The grammar:
+
+
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE4MjUzNzcwMDYsMTQ1MDU0NTkxMiwxNT
-M1Nzc3NTkyLDE5MDI4Mjk4MjcsMTQ4ODk3MzkwNywtMTEyNzYx
-MzY5OCwtMTE3OTY1MTc4LC0xNTQ4NjA1ODY0XX0=
+eyJoaXN0b3J5IjpbOTQ2MjE4NzA2LDE0NTA1NDU5MTIsMTUzNT
+c3NzU5MiwxOTAyODI5ODI3LDE0ODg5NzM5MDcsLTExMjc2MTM2
+OTgsLTExNzk2NTE3OCwtMTU0ODYwNTg2NF19
 -->
