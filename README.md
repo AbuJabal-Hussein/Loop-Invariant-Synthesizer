@@ -31,8 +31,8 @@ The conditions files must follow the following format:
 Examples: 
 
 1) ```    
-    pre_cond : True
-    post_cond : all([myList[i] == str1[i] for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) and (myList[47] == 'program')
+   pre_cond : True
+   post_cond : isPalindrome == True
     ```
 
 2)  ```    
@@ -42,8 +42,8 @@ Examples:
 
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTk2NTMwNjY3Miw4MjM1MTU1MzQsOTQ2Mj
-E4NzA2LDE0NTA1NDU5MTIsMTUzNTc3NzU5MiwxOTAyODI5ODI3
-LDE0ODg5NzM5MDcsLTExMjc2MTM2OTgsLTExNzk2NTE3OCwtMT
-U0ODYwNTg2NF19
+eyJoaXN0b3J5IjpbLTE4NDUzOTg0MTAsODIzNTE1NTM0LDk0Nj
+IxODcwNiwxNDUwNTQ1OTEyLDE1MzU3Nzc1OTIsMTkwMjgyOTgy
+NywxNDg4OTczOTA3LC0xMTI3NjEzNjk4LC0xMTc5NjUxNzgsLT
+E1NDg2MDU4NjRdfQ==
 -->
