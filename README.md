@@ -3,7 +3,7 @@ This is the final project of the Software Synthesis and Automated Reasoning cour
 
 # Running Tests Benchmarks
 
-
+The script for running the tests benchmarks can be invoked 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNTY3MzYwNjk3XX0=
+eyJoaXN0b3J5IjpbLTE2NDIwNDM5MTJdfQ==
 -->
