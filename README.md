@@ -21,11 +21,13 @@ The input program needs to have at most 1 loop. A call to \___inv_\__() must be 
 
     __inv__(a=a, b=b, c=c)
 ### The grammar:
+As mentioned before, it must be a sub grammar of the grammar found in synatx.py.
 
 
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbOTQ2MjE4NzA2LDE0NTA1NDU5MTIsMTUzNT
-c3NzU5MiwxOTAyODI5ODI3LDE0ODg5NzM5MDcsLTExMjc2MTM2
-OTgsLTExNzk2NTE3OCwtMTU0ODYwNTg2NF19
+eyJoaXN0b3J5IjpbLTIwNTEwMjcxMzEsOTQ2MjE4NzA2LDE0NT
+A1NDU5MTIsMTUzNTc3NzU5MiwxOTAyODI5ODI3LDE0ODg5NzM5
+MDcsLTExMjc2MTM2OTgsLTExNzk2NTE3OCwtMTU0ODYwNTg2NF
+19
 -->
