@@ -15,11 +15,12 @@ To successfully run the tool on a python code, you need to provide the python co
 To successfully run: 
 
     python main.py --program <input program file> --grammar <Grammar file> --conditions <conditions file> [-t NUM]
-
+### The input program:
+The input program needs to have at most 1 loop. a call to __inv__()
 
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE0MDA5ODEyNDksMTQ1MDU0NTkxMiwxNT
-M1Nzc3NTkyLDE5MDI4Mjk4MjcsMTQ4ODk3MzkwNywtMTEyNzYx
-MzY5OCwtMTE3OTY1MTc4LC0xNTQ4NjA1ODY0XX0=
+eyJoaXN0b3J5IjpbLTMyNzAwNTI1NywxNDUwNTQ1OTEyLDE1Mz
+U3Nzc1OTIsMTkwMjgyOTgyNywxNDg4OTczOTA3LC0xMTI3NjEz
+Njk4LC0xMTc5NjUxNzgsLTE1NDg2MDU4NjRdfQ==
 -->
