@@ -8,10 +8,10 @@ The script for running the tests benchmarks can be invoked by running the main f
 It is possible to provide a timeout for each input python program run, by adding "--time-out" (or '-t' for short).
 This option can be added regardless of run mode, meaning it can be added whether you are running the test benchmarks or using the tool with your personal inputs for your own run.
 
-# The input format
+# The Input Format
 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTUzNTc3NzU5MiwxOTAyODI5ODI3LDE0OD
-g5NzM5MDcsLTExMjc2MTM2OTgsLTExNzk2NTE3OCwtMTU0ODYw
-NTg2NF19
+eyJoaXN0b3J5IjpbMTQ1MDU0NTkxMiwxNTM1Nzc3NTkyLDE5MD
+I4Mjk4MjcsMTQ4ODk3MzkwNywtMTEyNzYxMzY5OCwtMTE3OTY1
+MTc4LC0xNTQ4NjA1ODY0XX0=
 -->
