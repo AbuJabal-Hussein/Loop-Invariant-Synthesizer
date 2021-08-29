@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : True
+post_cond : (len(myList) == len(shiftedList)) and (len(str1) % 2 == 0 and all([index(shiftedList, item) != -1 for item in myList]))

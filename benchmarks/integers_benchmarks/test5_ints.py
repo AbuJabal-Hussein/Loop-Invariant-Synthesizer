@@ -2,7 +2,7 @@ from utilities.inv import __inv__
 
 myList = [1874, 4879, 4987, 6541, 154, 321, 156, 987]
 count = 0
-limiter = 5616
+limiter = 4616
 n = len(myList)
 i = 0
 while i < n:

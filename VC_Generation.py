@@ -99,7 +99,10 @@ class VCGenerator(object):
             return Int(var_name)
 
         def expr_is_int(expr, expr_eval):
-            return is_int(expr_eval) or isinstance(expr_eval, ArithRef) or isinstance(expr_eval, int) or expr.root in ['len', 'max', 'min', 'index', 'sum']
+            return is_int(expr_eval) or \
+                   isinstance(expr_eval, int) or \
+                   isinstance(expr_eval, ArithRef) or \
+                   expr.root in ['NUM', 'len', 'max', 'min', 'index', 'sum']
 
         def eval_expr(expr, tagged_id=False, collected_vars=None):
             tagged_id = self.should_tag if not self.should_tag else tagged_id
@@ -132,6 +135,8 @@ class VCGenerator(object):
                     items_vc = And(items_vc, expr2_eval[0])
 
                 if items_vc is not None:
+                    if expr.root in ['!=', '>', '<', '<=', '>=', '==', 'AND', 'OR']:
+                        return And(items_vc, OP[expr.root](item1, item2))
                     return items_vc, OP[expr.root](item1, item2)
                 return OP[expr.root](item1, item2)
 
@@ -144,15 +149,15 @@ class VCGenerator(object):
                 expr2 = expr.subtrees[1]
                 var_name = expr1.subtrees[0].root
                 eval_rhs = eval_expr(expr2, tagged_id=False)
-                if expr2.root == 'NUM' or expr_is_int(expr2, eval_rhs):
+                if expr2.root == "BOOL" or isinstance(eval_rhs, BoolRef) or type(eval_rhs) == bool:
+                    vars_dict[var_name] = [Bool(var_name), BoolSort(), 1]
+                    vars_dict[var_name + '_'] = [Bool(var_name + '_'), BoolSort(), 1]
+                elif expr2.root == 'NUM' or expr_is_int(expr2, eval_rhs):
                     vars_dict[var_name] = [Int(var_name), IntSort(), 1]
                     vars_dict[var_name + '_'] = [Int(var_name + '_'), IntSort(), 1]
                 elif expr2.root == 'STR' or expr2.root in string_types:
                     vars_dict[var_name] = [String(var_name), StringSort(), 1]
                     vars_dict[var_name + '_'] = [String(var_name + '_'), StringSort(), 1]
-                elif expr2.root == "BOOL" or isinstance(eval_rhs, BoolRef) or type(eval_rhs) == bool:
-                    vars_dict[var_name] = [Bool(var_name), BoolSort(), 1]
-                    vars_dict[var_name + '_'] = [Bool(var_name + '_'), BoolSort(), 1]
                 elif expr2.root in list_types:
                     vars_dict[var_name] = [Array(var_name, IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), eval_rhs[3]]
                     vars_dict[var_name + '_'] = [Array(var_name + '_', IntSort(), eval_rhs[2]), ArraySort(IntSort(), eval_rhs[2]), eval_rhs[3]]
@@ -170,12 +175,18 @@ class VCGenerator(object):
                 eval_lhs = eval_expr(expr1, tagged_id=True)
                 if not(collected_vars is None):
                     collected_vars.append(OP['=='](eval_lhs, eval_expr(expr1, tagged_id=False)))
+                eq_vc = []
+                if type(eval_lhs) is tuple:
+                    eq_vc.append(eval_lhs[0])
+                    eval_lhs = eval_lhs[1]
 
-                if expr2.root in list_types:
-                    return And(OP['=='](eval_lhs, eval_rhs[1]), eval_rhs[0])
+                if expr2.root in list_types or type(eval_rhs) is tuple:
+                    eq_vc.append(eval_rhs[0])
+                    eval_rhs = eval_rhs[1]
+
+                if eq_vc:
+                    return And(eq_vc + [OP['=='](eval_lhs, eval_rhs)])
                 else:
-                    if type(eval_rhs) is tuple:
-                        return And(eval_rhs[0], OP['=='](eval_lhs, eval_rhs[1]))
                     return OP['=='](eval_lhs, eval_rhs)
 
             elif expr.root in ['+=', '-=', '*=', '/=', '**=']:
@@ -186,13 +197,18 @@ class VCGenerator(object):
                 if collected_vars is not None:
                     collected_vars.append(OP['=='](eval_lhs, eval_expr(expr1, tagged_id=False)))
                 item_rhs = eval_rhs
-                items_vc = None
+                item_lhs = eval_lhs
+                items_vc = []
                 if type(item_rhs) is tuple:
                     item_rhs = eval_rhs[1]
                     items_vc = eval_rhs[0]
-                assign_vc = OP['=='](eval_lhs, OP[expr.root[:-1]](eval_lhs, item_rhs))
-                if items_vc is not None:
-                    assign_vc = And(items_vc, assign_vc)
+                if type(item_lhs) is tuple:
+                    item_lhs = eval_lhs[1]
+                    items_vc.append(eval_lhs[0])
+
+                assign_vc = OP['=='](eval_lhs, OP[expr.root[:-1]](item_lhs, item_rhs))
+                if items_vc:
+                    assign_vc = And(items_vc + [assign_vc])
                 return assign_vc
 
             elif expr.root == 'DEREF':  # if this doesnt work, try operator.getitem and operator.setitem
@@ -201,6 +217,13 @@ class VCGenerator(object):
                 eval_id = eval_expr(lst_id,
                                     tagged_id=False)  # maybe we should leave tagged_id without change (as set by the caller). this should allow a[i] to be on LHS if needed.. im not sure though
                 eval_index = eval_expr(index, tagged_id=False)
+                print('----------DEREF---------')
+                print(lst_id)
+                print(index)
+                print(eval_id)
+                print(eval_index)
+                if type(eval_index) is tuple:
+                    return eval_index[0], eval_id[eval_index[1]]
                 return eval_id[eval_index]
 
             elif expr.root == 'LIST_E':
@@ -295,7 +318,11 @@ class VCGenerator(object):
                 else:
                     inserted_item = eval_items[1]
 
-                arr = Array(next(gen_var), IntSort(), item_type)
+                if arr_len > 0:
+                    arr = Array(next(gen_var), IntSort(), item_type)
+                else:
+                    item_type = get_expr_type(expr.subtrees[1], eval_items[1])
+                    arr = Array(next(gen_var), IntSort(), item_type)
 
                 if expr.subtrees[0].root not in list_types:
                     arr_value = And([arr[arr_len] == inserted_item] + [arr[i] == arr2[i] for i in range(arr_len)])
@@ -686,5 +713,7 @@ class VCGenerator(object):
 
 
 if __name__ == '__main__':
-    input_code = read_source_file("benchmarks/test_list_comp.py")
+    input_code = read_source_file("benchmarks/hybrid_benchmarks/test6_hybrid.py")
+    # input_code = read_source_file("benchmarks/strings_benchmarks/test6_strings.py")
+    # input_code = read_source_file("benchmarks/integers_benchmarks/test7_ints.py")
     pre_loop, loop_cond, loop_body, post_loop = VCGenerator()(input_code)

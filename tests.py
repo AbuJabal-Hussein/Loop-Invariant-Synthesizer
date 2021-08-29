@@ -4,7 +4,7 @@ import multiprocessing
 import os
 
 
-def run_tests(directory='D:\\Technion - PC\\Software Synthesis and Automated Reasoning\\finalProject\\benchmarks\\',
+def run_tests(directory='benchmarks\\',
               timeout=8):
     print("\n\n-------------------------Checking Files-------------------------")
     print("timeout=%f"%timeout)

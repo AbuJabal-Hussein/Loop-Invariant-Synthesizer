@@ -1,2 +1,0 @@
-pre_cond : True
-post_cond : All(row[i][i] == 1 for i in [0, 1, 2]) or (colsNum == 2 and (mat[0][1] == -4))

@@ -323,7 +323,9 @@ class BottomUp:
             if t_ == "int":
                 return Int(v_), int(val), IntSort(), Int
             if t_ == "str":
-                return String(v_), val, StringSort(), String
+                return String(v_), StringVal(val), StringSort(), String
+            if t_ == 'bool':
+                return Bool(v_), bool(val), BoolSort(), bool
 
         with open(self.program_states_file, "r") as source:
             content = source.read()
@@ -335,10 +337,11 @@ class BottomUp:
                     var, t, value = var_data.split(sep=' ', maxsplit=2)
                     if t == 'list':
                         data = ast.literal_eval(value)
-                        cons, z3sort, z3type = arr_to_z3_1type(var, data)
-                        curr_state_rules = curr_state_rules + cons
-                        self.vars_dict[var] = [z3type, z3sort, len(data)]
-                        self.vars_dict_multi[var] = ["array", True, len(data)]
+                        if data:
+                            cons, z3sort, z3type = arr_to_z3_1type(var, data)
+                            curr_state_rules = curr_state_rules + cons
+                            self.vars_dict[var] = [z3type, z3sort, len(data)]
+                            self.vars_dict_multi[var] = ["array", True, len(data)]
                     else:
 
                         z3type, z3value, z3sort, builder = to_z3type(var, t, value)
@@ -388,7 +391,7 @@ class BottomUp:
                     tagged = var + "_"
                     node.subtrees[0] = Tree(tagged)
                     if tagged not in self.vars_dict.keys():
-                        adding[tagged] = [Int(tagged) if self.vars_dict[var][0].is_int()
+                        adding[tagged] = [Int(tagged) if is_int(self.vars_dict[var][0])
                                           else String(tagged), lst[1], lst[2]]
         for k, elem in adding.items():
             self.vars_dict[k] = elem
@@ -420,11 +423,11 @@ class BottomUp:
                 else:
                     raise err
             except Z3Exception as err:
-                if 'sort mismatch' in err.args[0]:
-                    continue
-                raise err
-            except Exception as err:  # todo: ask about if we should do this or not
+                # if 'sort mismatch' in err.args[0] \
+                #         or "b\"Sort of polymorphic function" in err.args[0]:
+                #     continue
                 continue
+                # raise err
 
             if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
                 continue

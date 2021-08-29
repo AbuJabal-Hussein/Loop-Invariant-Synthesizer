@@ -12,18 +12,18 @@ i = 0
 j = 0
 arrLen = 15
 while (i < arrLen) and (loopnum < 2):
-    __inv__(myList=myList, sortedList=sortedList, count=count, iteration=loopnum, i=i, j=j, arrLen=arrLen)
-    if loopnum == 0:
-        count[myList[i]] += 1
-        i += 1
-    elif loopnum == 1:
-        if count[j] > 0:
-            sortedList[i] = j
-            count[j] -= 1
-            i += 1
-        if count[j] == 0:
-            j += 1
+	__inv__(myList=myList, sortedList=sortedList, count=count, loopnum=loopnum, i=i, j=j, arrLen=arrLen)
+	if loopnum == 0:
+		count[myList[i]] += 1
+		i += 1
+	elif loopnum == 1:
+		if count[j] > 0:
+			sortedList[i] = j
+			count[j] -= 1
+			i += 1
+		if count[j] == 0:
+			j += 1
 
-    if i == arrLen:
-        loopnum += 1
-        i = 0
+	if i == arrLen:
+		loopnum += 1
+		i = 0

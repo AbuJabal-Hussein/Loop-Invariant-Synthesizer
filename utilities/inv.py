@@ -76,6 +76,6 @@ def reverse(lst):
     return lst
 
 
-def substring(str1, start, end):
-    sub_str = str1[start,end]
+def substring(str1: str, start: int, end: int):
+    sub_str = str1[start: end]
     return sub_str

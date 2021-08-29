@@ -7,8 +7,8 @@ count = 0
 j = 0
 i = 0
 while i < len(str1):
-    __inv__(str1=str1, str2=str2, count=count, j=0, i=0)
-    if (index(str2, str1[i]) != -1) and (j == index(str1, str1[i])):
-        count += 1
-    i += 1
-    j += 1
+	__inv__(str1=str1, str2=str2, count=count, j=0, i=0)
+	if (index(str2, str1[i]) != -1) and (j == index(str1, str1[i])):
+		count += 1
+	i += 1
+	j += 1

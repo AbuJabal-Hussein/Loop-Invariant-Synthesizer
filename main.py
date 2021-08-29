@@ -11,12 +11,12 @@ import sys
 def get_pre_post_conds(file):
     post_cond_ = pre_cond_ = ""
     with open(file, "r") as reader:
-        content = reader.read()
+        content = reader.read().strip()
         for line in content.split(sep='\n'):
             var_name, data = line.split(sep=":")
-            if var_name == "post_cond":
+            if var_name.strip() == "post_cond":
                 post_cond_ = data.strip()
-            elif var_name == "pre_cond":
+            elif var_name.strip() == "pre_cond":
                 pre_cond_ = data.strip()
 
         return pre_cond_, post_cond_
@@ -40,12 +40,13 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
     print("code: {}".format(input_code))
     pre_loop, loop_cond, loop_body, post_loop = VCGenerator()(input_code)
     GRAMMAR = get_grammar(grammar_file)
-    TOKENS = r"(if|else|elif|while)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+)" \
-             r" (?P<ASSOP>[+\-*/]=) (?P<MULTDIV>[*/]) (?P<PLUSMINUS>[+\-])  :" \
+    TOKENS = r" (if|else|elif|while|for|in)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+)" \
+             r" (?P<ASSOPPOWER>(\*\*=)) (?P<ASSOP>[+\-*/]=) (?P<POWER>(\*\*)) (?P<MULTDIV>[*/%]) (?P<PLUSMINUS>[+\-])  :" \
              r" (?P<RPAREN>\)) (?P<LSPAREN>\[) (?P<RSPAREN>\]) " \
              r" (?P<NOT>not) (?P<FALSE>False) (?P<TRUE>True) " \
              r" (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<REMOVE>remove) (?P<MAX>max)" \
-             r" (?P<INDEX>index) (?P<SUBSTRING>substring) (?P<INT>int)" \
+             r" (?P<MIN>min) (?P<INDEX>index) (?P<SUBSTRING>substring) (?P<INT>int) (?P<BOOLTYPE>bool) (?P<CHARAT>charAt) " \
+             r" (?P<ALL>all) (?P<ANY>any) (?P<SUM>sum) (?P<RANGE>range)" \
              r" (?P<STR1>\'([^\n\r\"\'\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\'\\]|\\[rnt\"\'\\])+\") " \
              r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) " \
              r" (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) " \
@@ -54,6 +55,10 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
                   timeout=timeout)
     pre_cond, post_cond = get_pre_post_conds(conds_file)
     pre_cond, post_cond = bt.batch_to_z3([pre_cond, post_cond]) or True, True
+    # print('-------pre and post cond--------')
+    # print(pre_cond)
+    # print(post_cond)
+    # exit(77)
     # print("Vars:")
     # print(bt.p)
     # print("Tokens:")
@@ -100,7 +105,7 @@ class TestIntCodes:
 
     def setUp(self):
         self.startTime = time()
-        self.path_prefix = "benchmarks/integers_benchmark/"
+        self.path_prefix = "benchmarks/integers_benchmarks/"
 
     def test1_int(self):
         res_dict = dict()
@@ -265,7 +270,8 @@ if __name__ == '__main__':
                         type=float, default=8.00, dest="timeout")
 
     args = parser.parse_args()
-
+    if args.timeout == 0:   # todo: check this
+        args.timeout = 1
     if args.tests:
         from tests import run_tests
         run_tests(timeout=args.timeout)

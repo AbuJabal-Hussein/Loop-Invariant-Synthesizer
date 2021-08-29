@@ -15,7 +15,7 @@ class PythonParser(object):
              r" (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<REMOVE>remove) (?P<MAX>max)" \
              r" (?P<MIN>min) (?P<INDEX>index) (?P<SUBSTRING>substring) (?P<INT>int) (?P<BOOLTYPE>bool) (?P<CHARAT>charAt) " \
              r" (?P<ALL>all) (?P<ANY>any) (?P<SUM>sum) (?P<RANGE>range)" \
-             r" (?P<STR1>\'([^\n\r\"\'\\]|\\[rnt\"\'\\])+\') (?P<STR2>\"([^\n\r\"\'\\]|\\[rnt\"\'\\])+\") " \
+             r" (?P<STR1>\'([^\n\r\"\'\\]|\\[rnt\"\'\\])*\') (?P<STR2>\"([^\n\r\"\'\\]|\\[rnt\"\'\\])*\") " \
              r" (?P<RELOP>[!<>=]=|([<>])) (?P<AND>and) (?P<OR>or) (?P<ID>[^\W\d]\w*) (?P<NEWLINE>[\r\n(\r\n)]+) " \
              r" (?P<INDENT5>(\t\t\t\t\t)) (?P<INDENT4>(\t\t\t\t)) (?P<INDENT3>(\t\t\t)) " \
              r" (?P<INDENT2>(\t\t)) (?P<INDENT>(\t))  =".split()
@@ -24,7 +24,7 @@ class PythonParser(object):
     S   ->   S1 | S1 NEWLINE | S1 NEWLINE INDENT   |  E  |  S1 NEWLINE S
     
     
-    S1  ->   ID = E   | IF_S5 |  IF_S4 | IF_S3 | IF_S2 | IF_S  | WHILE_S5 | WHILE_S4 | WHILE_S3 | WHILE_S2 | WHILE_S | ID ASSOP E  | ID ASSOPPOWER E | DEREF = E  |  INV_FUNC | FUNCS
+    S1  ->   ID = E   | IF_S5 |  IF_S4 | IF_S3 | IF_S2 | IF_S  | WHILE_S5 | WHILE_S4 | WHILE_S3 | WHILE_S2 | WHILE_S | ID ASSOP E  | ID ASSOPPOWER E | DEREF ASSOP E | DEREF = E  |  INV_FUNC | FUNCS
     S1  ->   LPAREN S RPAREN
     
     IF_S -> if E : BLOCK | if E : BLOCK NEWLINE ELSE_S | if E : BLOCK NEWLINE ELIF_S
@@ -330,7 +330,7 @@ if __name__ == '__main__':
     # ast = PythonParser()("while i < n and n >= 0:\n"
     #                      "\t__inv__(i=i, n=n, x=x, myList=myList)\n"
     #                      "\tx += 1")
-    ast = PythonParser()(read_source_file("benchmarks/test_list_comp.py"))
+    ast = PythonParser()(read_source_file("benchmarks/integers_benchmark/test7_ints.py"))
 
     if ast:
         print(">> Valid program.")

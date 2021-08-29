@@ -9,12 +9,12 @@ high = len(myList) - 1
 mid = 0
 res = -1
 while low <= high and (res == -1):
-    __inv__(myList=myList, x=x, low=low, high=high, mid=mid, res=res)
-    mid = int((high + low) / 2)
+	__inv__(myList=myList, x=x, low=low, high=high, mid=mid, res=res)
+	mid = int((high + low) / 2)
 
-    if myList[mid] < x:
-        low = mid + 1
-    elif myList[mid] > x:
-        high = mid - 1
-    else:
-        res = mid
+	if myList[mid] < x:
+		low = mid + 1
+	elif myList[mid] > x:
+		high = mid - 1
+	else:
+		res = mid

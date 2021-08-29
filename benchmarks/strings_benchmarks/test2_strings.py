@@ -8,11 +8,11 @@ strLen = len(str1)
 digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 i = 0
 while i < strLen:
-    __inv__(str1=str1, countDigits=countDigits, strLen=strLen, digits=digits, i=i)
-    if index(digits, charAt(str1, i)) != -1:
-        countDigits += 1
-    i += 1
+	__inv__(str1=str1, countDigits=countDigits, strLen=strLen, digits=digits, i=i)
+	if index(digits, charAt(str1, i)) != -1:
+		countDigits += 1
+	i += 1
 if strLen < len(digits):
-    i = len(digits)
+	i = len(digits)
 else:
-    i = len(digits) + 5
+	i = len(digits) + 5
