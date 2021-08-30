@@ -314,20 +314,20 @@ class BottomUp:
             return constrains, StringSort(), array_str
 
         def arr_to_z3_1type(array_name, ds):
+            sorts_dict = {int: IntSort(), bool: BoolSort(), str: StringSort(), list: ArraySort()}
             constrains = []
             arr_z3sort = None
-            if type(ds[0]) is int:
-                arr_z3sort = IntSort()
-                arr = Array(array_name, IntSort(), arr_z3sort)
-                for i, data in enumerate(ds):
-                    constrains.append(arr[i] == data)
-            else:
-                arr_z3sort = StringSort()
+            if type(ds[0]) is str:
+                arr_z3sort = sorts_dict[type(ds[0])]
                 arr = Array(array_name, IntSort(), arr_z3sort)
                 for i, data in enumerate(ds):
                     strval = StringVal(data)
                     constrains.append(arr[i] == strval)
-
+            else:
+                arr_z3sort = sorts_dict[type(ds[0])]
+                arr = Array(array_name, IntSort(), arr_z3sort)
+                for i, data in enumerate(ds):
+                    constrains.append(arr[i] == data)
             return constrains, arr_z3sort, arr
 
         def to_z3type(v_, t_, val):
@@ -336,7 +336,7 @@ class BottomUp:
             if t_ == "str":
                 return String(v_), StringVal(val), StringSort(), String
             if t_ == 'bool':
-                return Bool(v_), bool(val), BoolSort(), bool
+                return Bool(v_), bool(val), BoolSort(), Bool
 
         with open(self.program_states_file, "r") as source:
             content = source.read()
@@ -352,7 +352,7 @@ class BottomUp:
                             cons, z3sort, z3type = arr_to_z3_1type(var, data)
                             curr_state_rules = curr_state_rules + cons
                             self.vars_dict[var] = [z3type, z3sort, len(data)]
-                            self.vars_dict_multi[var] = ["array", True, len(data)]
+                            self.vars_dict_multi[var] = [lambda _x_: Array(_x_, IntSort(), z3sort), True, len(data)]
                     else:
 
                         z3type, z3value, z3sort, builder = to_z3type(var, t, value)

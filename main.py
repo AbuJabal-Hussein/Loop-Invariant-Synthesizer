@@ -6,6 +6,12 @@ import os
 # import timeout_decorator
 import sys
 
+def get_neg_examples(file):
+    negatives = []
+    with open(file, "r") as reader:
+        content = reader.read().strip()
+        for line in content.split(sep='\n'):
+            negative_examples.append(line)
 
 
 def get_pre_post_conds(file):
@@ -275,7 +281,7 @@ if __name__ == '__main__':
                         dest="restrictions_file")
 
     args = parser.parse_args()
-    if args.timeout == 0:   # todo: check this
+    if args.timeout == 0:
         args.timeout = 1
     if args.tests:
         from tests import run_tests
@@ -284,4 +290,6 @@ if __name__ == '__main__':
     if not args.program_file or not args.grammar_file:
         print("error: the following arguments are required: --program/-p, --grammar/-g  OR --tests")
         exit(1)
+    negative_examples = get_neg_examples(args.restrictions_file) if args.restrictions_file else []
+
     run(args.program_file, args.grammar_file, args.conds_file, timeout=args.timeout * 60)
