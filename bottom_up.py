@@ -21,14 +21,14 @@ def check_passing(generator, ast_chunks, x_, limit=-1):  # TODO: Rename
             return []
         s_.reset()
         ast = generator.parser(y_)
-        print('---------check_passing-----------')
-        print(y_)
-        print(ast)
-        try:
-            y = generator.generate_vc(ast)[0]
-        except TypeError as err:
-            print(err)
-            print(err.args)
+        # print('---------check_passing-----------')
+        # print(y_)
+        # print(ast)
+        # try:
+        y = generator.generate_vc(ast)[0]
+        # except TypeError as err:
+        #     print(err)
+        #     print(err.args)
         try:
             s_.add(Not(x == y))
         except Exception:

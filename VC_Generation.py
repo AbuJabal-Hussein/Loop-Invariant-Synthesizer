@@ -282,7 +282,7 @@ class VCGenerator(object):
                 return vars_dict[str(lst_eval)][2]
 
             elif expr.root == 'append':
-                if len(expr.subtrees) == 0:
+                if len(expr.subtrees) <= 1:
                     raise ValueError('Syntax Error: missing list argument in the function \'append\'')
 
                 # ideally, there should be two subtree.. and it should be a concrete list or a list variable and an item
@@ -360,7 +360,7 @@ class VCGenerator(object):
 
             elif expr.root == 'max':
                 if len(expr.subtrees) == 0:
-                    raise ValueError('Syntax Error: missing list or two integers argument in the function \'max\'')
+                    raise ValueError('Syntax Error: missing integers list or two integers arguments in the function \'max\'')
 
                 # ideally, there should be two subtree.. containing two integers
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -392,11 +392,11 @@ class VCGenerator(object):
                         return items_vc, max_vc
 
                     return max_vc
-                return eval_items[0]
+                raise ValueError('Type Error: first argument of the function \'max\' must be of type integers list')
 
             elif expr.root == 'min':
-                if len(expr.subtrees) == 0:  # todo: should i remove this?
-                    return 0
+                if len(expr.subtrees) == 0:
+                    raise ValueError('Syntax Error: missing list or two integers argument in the function \'min\'')
 
                 # ideally, there should be two subtree.. containing two integers
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -410,7 +410,7 @@ class VCGenerator(object):
                         if expr.subtrees[0].root in list_types:
                             min_vc = And(eval_items[0][0], min_vc)
                         return min_vc, min_item
-                    return eval_items[0]
+                    raise ValueError('Type Error: first argument of the function \'min\' must be of type integers list')
 
                 elif expr_is_int(expr.subtrees[0], eval_items[0]) and expr_is_int(expr.subtrees[1], eval_items[1]):
                     item1 = eval_items[0]
@@ -426,13 +426,12 @@ class VCGenerator(object):
                     min_vc = simplify(If(item1 <= item2, item1, item2))
                     if items_vc is not None:
                         return items_vc, min_vc
-
                     return min_vc
-                return eval_items[0]
+                raise ValueError('Type Error: Expected integers list or two integers arguments in the function \'min\'')
 
             elif expr.root == 'index':
                 if len(expr.subtrees) <= 1:
-                    return -1
+                    raise ValueError('Syntax Error: missing arguments in the function \'index\'')
 
                 # ideally, there should be two subtree.. and it should be a concrete list or a list variable and an item
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -454,10 +453,11 @@ class VCGenerator(object):
 
                 elif is_string(eval_items[0]):
                     if not is_string(eval_items[1]):
-                        return -1
+                        raise ValueError(
+                            'Type Error: second argument of the function \'index\' must be of type str')
                     return simplify(IndexOf(eval_items[0], eval_items[1], 0))
 
-                return -1
+                raise ValueError('Type Error: first argument of the function \'index\' must be of type list or string')
 
             elif expr.root == 'all':
                 if len(expr.subtrees) == 1:
@@ -469,10 +469,13 @@ class VCGenerator(object):
                         var_name = expr.subtrees[0].subtrees[0].root
                         arr = vars_dict[var_name][0]
                         arr_len = vars_dict[var_name][2]
+                    else:
+                        raise ValueError(
+                            'Type Error: first argument of the function \'all\' must be of type bool list')
 
                     return And([arr[i] for i in range(0, arr_len)])
-                else:   # todo: should we raise an exception?
-                    raise ValueError('Syntax Error: wrong number of arguments in \'all\' function')
+                else:
+                    raise ValueError('Syntax Error: wrong number of arguments in function \'all\'')
 
             elif expr.root == 'any':
                 if len(expr.subtrees) == 1:
@@ -485,10 +488,11 @@ class VCGenerator(object):
                         arr = vars_dict[var_name][0]
                         arr_len = vars_dict[var_name][2]
                     else:
-                        return False  # todo: what should we do if the argument is not a list?
+                        raise ValueError(
+                            'Type Error: first argument of the function \'all\' must be of type bool list')
                     return Or([arr[i] for i in range(0, arr_len)])
-                else:   # todo: should we raise an exception?
-                    raise ValueError('Syntax Error: wrong number of arguments in \'all\' function')
+                else:
+                    raise ValueError('Syntax Error: wrong number of arguments in function \'any\'')
 
             elif expr.root == 'charAt':
                 # expects 2 arguments: a string and an index
@@ -503,7 +507,9 @@ class VCGenerator(object):
                         if final_vc is not None:
                             return simplify(And(final_vc)), simplify(SubString(eval_items[0], start_index, 1))
                         return simplify(SubString(eval_items[0], start_index, 1))
-                return StringVal('')
+                    raise ValueError('Type Error: the function \'charAt\' must be have 2 argument: type str, type int')
+
+                raise ValueError('Syntax Error: wrong number of arguments in function \'charAt\'')
 
             elif expr.root == 'substring':
                 # expects 3 arguments: a string, a starting index and an ending index
@@ -522,7 +528,9 @@ class VCGenerator(object):
                         if final_vc:
                             return simplify(And(final_vc)), simplify(SubString(eval_items[0], start_index, end_index - start_index))
                         return simplify(SubString(eval_items[0], start_index, end_index - start_index))
-                return StringVal('')
+                    raise ValueError('Type Error: the function \'substring\' must be have 3 argument: type str, type int, type int')
+
+                raise ValueError('Syntax Error: wrong number of arguments in function \'substring\'')
 
             elif expr.root == 'LIST_COMPREHENSION':
                 if len(expr.subtrees) == 3:
@@ -537,9 +545,9 @@ class VCGenerator(object):
                             comp_lst = vars_dict[arr_var_name][0]
                             comp_lst_type = comp_lst.range()
                             arr_len = vars_dict[arr_var_name][2]
-                        else:  # todo: raise exception
-                            arr = Array(next(gen_var), IntSort(), IntSort())
-                            return True, arr, IntSort(), 0
+                        else:
+                            raise ValueError(
+                                'Type Error: third argument of the list comprehension must be of type list')
 
                         id_backup = None
                         id_backup_tagged = None
@@ -578,14 +586,16 @@ class VCGenerator(object):
                             vars_dict.pop(var_name)
                             # vars_dict.pop(var_name + '_')
                         return And(total_vc), arr, item_type, arr_len
-
-                else:  # todo: raise exception
-                    arr = Array(next(gen_var), IntSort(), IntSort())
-                    return True, arr, IntSort(), 0
+                    else:
+                        raise ValueError(
+                            'Type Error: in the list comprehension: the 2nd argument must be a variable, and the 3rd argument must be of type list')
+                else:
+                    # we shouldn't reach here in this phase
+                    raise ValueError('Syntax Error: wrong format of list comprehension')
 
             elif expr.root == 'sum':
                 if len(expr.subtrees) == 0:
-                    return 0  # todo: raise exception
+                    raise ValueError('Syntax Error: wrong number of arguments in function \'sum\'')
 
                 # ideally, there should be two subtree.. containing two integers
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -601,9 +611,10 @@ class VCGenerator(object):
                         if expr.subtrees[0].root in list_types:
                             sum_vc = And(eval_items[0][0], sum_vc)
                         return sum_vc, lst_sum
-                    return eval_items[0]  # todo: raise exception
+                    raise ValueError(
+                        'Type Error: the argument of the function \'sum\' must be of type list')
 
-                if expr_is_int(expr.subtrees[0], eval_items[0]) and expr_is_int(expr.subtrees[1], eval_items[1]):
+                if all([expr_is_int(expr.subtrees[k], eval_items[k]) for k in range(len(expr.subtrees))]):
                     items_vc = []
                     items_num = len(expr.subtrees)
                     v = IntVector(next(gen_var), items_num)
@@ -616,24 +627,32 @@ class VCGenerator(object):
                     sum_vc = Sum(v)
                     return And(items_vc), sum_vc
 
-                return eval_items[0]  # todo: raise exception
+                raise ValueError(
+                    'Type Error: the arguments of the function \'sum\' must be of type int')
 
             elif expr.root == 'range':
                 # warning! we only accept integer values as arguments.. i.e. no variables
-                if len(expr.subtrees) == 1 and expr.subtrees[0].root == 'NUM':
-                    arr_len = expr.subtrees[0].subtrees[0].root
-                    arr = Array(next(gen_var), IntSort(), IntSort())
-                    arr_vc = And([arr[j] == j for j in range(arr_len)])
-                    return arr_vc, arr, IntSort(), arr_len
-                elif len(expr.subtrees) == 2 and expr.subtrees[0].root == 'NUM' and expr.subtrees[1].root == 'NUM':
-                    start_index = expr.subtrees[0].subtrees[0].root
-                    end_index = expr.subtrees[1].subtrees[0].root
-                    arr = Array(next(gen_var), IntSort(), IntSort())
-                    arr_vc = And([arr[j] == j for j in range(start_index, end_index)])
-                    return arr_vc, arr, IntSort(), end_index - start_index
-                else:  #todo: raise exception
-                    arr = Array(next(gen_var), IntSort(), IntSort())
-                    return True, arr, IntSort(), 0
+                if len(expr.subtrees) == 1:
+                    if expr.subtrees[0].root == 'NUM':
+                        arr_len = expr.subtrees[0].subtrees[0].root
+                        arr = Array(next(gen_var), IntSort(), IntSort())
+                        arr_vc = And([arr[j] == j for j in range(arr_len)])
+                        return arr_vc, arr, IntSort(), arr_len
+                    else:
+                        raise ValueError(
+                            'Type Error: the argument of the function \'range\' must be of type int (only literal integers not variables)')
+                elif len(expr.subtrees) == 2:
+                    if expr.subtrees[0].root == 'NUM' and expr.subtrees[1].root == 'NUM':
+                        start_index = expr.subtrees[0].subtrees[0].root
+                        end_index = expr.subtrees[1].subtrees[0].root
+                        arr = Array(next(gen_var), IntSort(), IntSort())
+                        arr_vc = And([arr[j] == j for j in range(start_index, end_index)])
+                        return arr_vc, arr, IntSort(), end_index - start_index
+                    else:
+                        raise ValueError(
+                            'Type Error: the arguments of the function \'range\' must be of type int (only literal integers not variables)')
+                else:
+                    raise ValueError('Syntax Error: wrong number of arguments in function \'range\'')
 
             return True
 
