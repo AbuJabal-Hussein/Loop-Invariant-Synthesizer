@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : All(index(item,'7') != -1 for item in myList) and (newList == reverse(myList))
+post_cond : All([index(item,'7') != -1 for item in myList]) and (newList == reverse(myList))
