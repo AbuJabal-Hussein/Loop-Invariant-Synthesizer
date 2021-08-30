@@ -39,6 +39,21 @@ class VCGenerator(object):
         print(post_loop)
         return pre_loop, loop_cond, loop_body, post_loop
 
+    def create_var(self, id_type, var_name):
+        if id_type == IntSort():
+            return Int(var_name)
+        elif id_type == BoolSort():
+            return Bool(var_name)
+        elif id_type == StringSort():
+            return String(var_name)
+        elif id_type == ArraySort(IntSort(), IntSort()):
+            return Array(var_name, IntSort(), IntSort())
+        elif id_type == ArraySort(IntSort(), BoolSort()):
+            return Array(var_name, IntSort(), BoolSort())
+        elif id_type == ArraySort(IntSort(), StringSort()):
+            return Array(var_name, IntSort(), StringSort())
+        return Int(var_name)
+
     # def break_down_loop(self, ast):
     #     def find_loop_node_parent(t):
     #         for node in t.subtrees:
@@ -83,20 +98,6 @@ class VCGenerator(object):
                 item_type = IntSort()
             return item_type
 
-        def create_var(id_type, var_name):
-            if id_type == IntSort():
-                return Int(var_name)
-            elif id_type == BoolSort():
-                return Bool(var_name)
-            elif id_type == StringSort():
-                return String(var_name)
-            elif id_type == ArraySort(IntSort(), IntSort()):
-                return Array(var_name, IntSort(), IntSort())
-            elif id_type == ArraySort(IntSort(), BoolSort()):
-                return Array(var_name, IntSort(), BoolSort())
-            elif id_type == ArraySort(IntSort(), StringSort()):
-                return Array(var_name, IntSort(), StringSort())
-            return Int(var_name)
 
         def expr_is_int(expr, expr_eval):
             return is_int(expr_eval) or \
@@ -167,12 +168,12 @@ class VCGenerator(object):
                     rhs_var_name = expr2.subtrees[0].root
                     rhs_var_type = vars_dict[rhs_var_name][1]
                     rhs_var_len = vars_dict[rhs_var_name][2]
-                    vars_dict[var_name] = [create_var(rhs_var_type, var_name), rhs_var_type, rhs_var_len]
-                    vars_dict[var_name + '_'] = [create_var(rhs_var_type, var_name + '_'), rhs_var_type, rhs_var_len]
+                    vars_dict[var_name] = [self.create_var(rhs_var_type, var_name), rhs_var_type, rhs_var_len]
+                    vars_dict[var_name + '_'] = [self.create_var(rhs_var_type, var_name + '_'), rhs_var_type, rhs_var_len]
                 elif type(eval_rhs) is tuple:
                     rhs_var_type = get_expr_type(expr2, eval_rhs[1])
-                    vars_dict[var_name] = [create_var(rhs_var_type, var_name), rhs_var_type, 1]
-                    vars_dict[var_name + '_'] = [create_var(rhs_var_type, var_name + '_'), rhs_var_type, 1]
+                    vars_dict[var_name] = [self.create_var(rhs_var_type, var_name), rhs_var_type, 1]
+                    vars_dict[var_name + '_'] = [self.create_var(rhs_var_type, var_name + '_'), rhs_var_type, 1]
 
                 eval_lhs = eval_expr(expr1, tagged_id=True)
                 if not(collected_vars is None):
@@ -561,8 +562,8 @@ class VCGenerator(object):
                         # item_type is the type of the items of the list comprehension
                         # first we evaluate a 'fake' expression to determine item_type in order to create a proper arr
                         tmp_var_name = next(gen_var)
-                        vars_dict[var_name] = [create_var(comp_lst_type, tmp_var_name), comp_lst_type, 1]
-                        # vars_dict[var_name + '_'] = [create_var(comp_lst_type, tmp_var_name + '_'), comp_lst_type, 1]
+                        vars_dict[var_name] = [self.create_var(comp_lst_type, tmp_var_name), comp_lst_type, 1]
+                        # vars_dict[var_name + '_'] = [self.create_var(comp_lst_type, tmp_var_name + '_'), comp_lst_type, 1]
                         expr1_eval = eval_expr(expr.subtrees[0])
                         item_type = get_expr_type(expr.subtrees[0], expr1_eval)
                         arr = Array(next(gen_var), IntSort(), item_type)
@@ -570,8 +571,8 @@ class VCGenerator(object):
                             tmp_var_name = next(gen_var)
                             # warning! if the item_type is an array we may get an un-wanted behaviour since we don't
                             # know length of the array.. and it's set to 1 in the next line
-                            vars_dict[var_name] = [create_var(comp_lst_type, tmp_var_name), comp_lst_type, 1]
-                            # vars_dict[var_name + '_'] = [create_var(comp_lst_type, tmp_var_name + '_'), comp_lst_type, 1]
+                            vars_dict[var_name] = [self.create_var(comp_lst_type, tmp_var_name), comp_lst_type, 1]
+                            # vars_dict[var_name + '_'] = [self.create_var(comp_lst_type, tmp_var_name + '_'), comp_lst_type, 1]
                             expr1_eval = eval_expr(expr.subtrees[0])
                             total_vc.append(comp_lst[i] == vars_dict[var_name][0])
                             if type(expr1_eval) is tuple:

@@ -326,8 +326,8 @@ class BottomUp:
             constrains = []
             arr_z3sort = None
             if type(ds[0]) is str:
-                arr_z3sort = sorts_dict[type(ds[0])]
-                arr = Array(array_name, IntSort(), arr_z3sort)
+                arr_z3sort_called = sorts_dict[type(ds[0])]
+                arr = Array(array_name, IntSort(), arr_z3sort_called)
                 arr_z3sort = sorts_dict_nocall[type(ds[0])]
                 for i, data in enumerate(ds):
                     strval = StringVal(data)
@@ -339,12 +339,12 @@ class BottomUp:
                 is_nested = True
                 constrains.append(VCGenerator()(array_name + "=" + str(ds))[0])
             else:
-                arr_z3sort = sorts_dict[type(ds[0])]
-                arr = Array(array_name, IntSort(), arr_z3sort)
+                arr_z3sort_called = sorts_dict[type(ds[0])]
+                arr = Array(array_name, IntSort(), arr_z3sort_called)
                 arr_z3sort = sorts_dict_nocall[type(ds[0])]
                 for i, data in enumerate(ds):
                     constrains.append(arr[i] == data)
-            return constrains, arr_z3sort, arr, is_nested
+            return constrains, arr_z3sort, arr, is_nested, ArraySort(IntSort(), arr_z3sort_called if arr_z3sort_called else ArraySort(IntSort(), arr_z3sort_nested))
 
         def to_z3type(v_, t_, val):
             if t_ == "int":
@@ -369,9 +369,9 @@ class BottomUp:
                     if t == 'list':
                         data = ast.literal_eval(value)
                         if data:
-                            cons, z3sort, z3type, is_nes = arr_to_z3_1type(var, data)
+                            cons, z3sort, z3type, is_nes, arr_type = arr_to_z3_1type(var, data)
                             curr_state_rules = curr_state_rules + cons
-                            self.vars_dict[var] = [z3type, z3sort, len(data)]
+                            self.vars_dict[var] = [z3type, arr_type, len(data)]
                             self.vars_dict_multi[var] = [z3sort,
                                                          wrapper_for_multiProcess_list_types_isNested
                                                          if is_nes
@@ -426,8 +426,8 @@ class BottomUp:
                     tagged = var + "_"
                     node.subtrees[0] = Tree(tagged)
                     if tagged not in self.vars_dict.keys():
-                        adding[tagged] = [Int(tagged) if is_int(self.vars_dict[var][0])
-                                          else String(tagged), lst[1], lst[2]]
+                        elem_type = self.vc_gen.create_var(self.vars_dict[var][1], tagged)
+                        adding[tagged] = [elem_type, lst[1], lst[2]]
         for k, elem in adding.items():
             self.vars_dict[k] = elem
             self.tagged_vars[k] = elem
@@ -451,6 +451,9 @@ class BottomUp:
             try:
                 inv = self.vc_gen.generate_vc(ast)[0]
                 print("str: {} ast: {} inv: {}".format(word, ast, inv))
+                s_ = Solver()
+                s_.add(inv)
+                print("added to s!")
             # except TypeError as err:
             #     continue
             #     # if "not supported between instances of " in err.args[0] \

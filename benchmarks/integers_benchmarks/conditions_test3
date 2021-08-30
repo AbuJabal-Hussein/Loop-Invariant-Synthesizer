@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : True
+post_cond : num == myList[5]
