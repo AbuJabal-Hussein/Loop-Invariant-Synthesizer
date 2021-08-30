@@ -26,8 +26,18 @@ def check_passing(generator, ast_chunks, x_, limit=-1):  # TODO: Rename
             return []
         s_.reset()
         ast = generator.parser(y_)
+        # print('---------check_passing-----------')
+        # print(y_)
+        # print(ast)
+        # try:
         y = generator.generate_vc(ast)[0]
-        s_.add(Not(x == y))
+        # except TypeError as err:
+        #     print(err)
+        #     print(err.args)
+        try:
+            s_.add(Not(x == y))
+        except Exception:
+            res.append(y_)
         if s_.check() == unsat:  # proved to be equal
             continue
         res.append(y_)
@@ -441,18 +451,24 @@ class BottomUp:
             try:
                 inv = self.vc_gen.generate_vc(ast)[0]
                 print("str: {} ast: {} inv: {}".format(word, ast, inv))
-            except TypeError as err:
-                if "not supported between instances of " in err.args[0] \
-                        or "unsupported operand type(s) for" in err.args[0]:
-                    continue
-                else:
-                    raise err
-            except Z3Exception as err:
-                # if 'sort mismatch' in err.args[0] \
-                #         or "b\"Sort of polymorphic function" in err.args[0]:
-                #     continue
+            # except TypeError as err:
+            #     continue
+            #     # if "not supported between instances of " in err.args[0] \
+            #     #         or "unsupported operand type(s) for" in err.args[0]:
+            #     #     continue
+            #     # else:
+            #     #     raise err
+            # except Z3Exception as err:
+            #     # if 'sort mismatch' in err.args[0] \
+            #     #         or "b\"Sort of polymorphic function" in err.args[0]:
+            #     #     continue
+            #     # raise err
+            #     continue
+            # except ValueError:
+            #     continue
+            except Exception:
                 continue
-                # raise err
+
             if not isinstance(inv, ExprRef):
                 continue
             if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
@@ -528,7 +544,7 @@ class BottomUp:
                     inv_tagged = self.tag_and_convert(inv)
                     # inv_tagged = self.batch_to_z3([self.inv_tagged(inv)])[0]
                     print("Inv {} and Tagged {}".format(inv, inv_tagged))
-                    yield (inv, inv_tagged)
+                    yield (simplify(inv), simplify(inv_tagged))
             for tagged in self.tagged_vars:
                 del self.vars_dict[tagged]
             self.tagged_vars.clear()

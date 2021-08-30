@@ -203,13 +203,13 @@ class VCGenerator(object):
                 items_vc = []
                 if type(item_rhs) is tuple:
                     item_rhs = eval_rhs[1]
-                    items_vc = eval_rhs[0]
+                    items_vc.append(eval_rhs[0])
                 if type(item_lhs) is tuple:
                     item_lhs = eval_lhs[1]
                     items_vc.append(eval_lhs[0])
 
                 assign_vc = OP['=='](eval_lhs, OP[expr.root[:-1]](item_lhs, item_rhs))
-                if items_vc:
+                if len(items_vc) > 0:
                     assign_vc = And(items_vc + [assign_vc])
                 return assign_vc
 
@@ -219,11 +219,6 @@ class VCGenerator(object):
                 eval_id = eval_expr(lst_id,
                                     tagged_id=False)  # maybe we should leave tagged_id without change (as set by the caller). this should allow a[i] to be on LHS if needed.. im not sure though
                 eval_index = eval_expr(index, tagged_id=False)
-                print('----------DEREF---------')
-                print(lst_id)
-                print(index)
-                print(eval_id)
-                print(eval_index)
                 if type(eval_index) is tuple:
                     return eval_index[0], eval_id[eval_index[1]]
                 return eval_id[eval_index]
@@ -252,8 +247,7 @@ class VCGenerator(object):
 
             elif expr.root == 'reverse':
                 if len(expr.subtrees) == 0:
-                    arr = IntVector(next(gen_var), 0)
-                    return True, arr, IntSort(), 0
+                    raise ValueError('Syntax Error: missing list argument in the function \'reverse\'')
 
                 # ideally, there should be only one subtree.. and it should be a concrete list or a list variable
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -268,9 +262,7 @@ class VCGenerator(object):
                     arr_len = eval_items[0][3]
                     item_type = eval_items[0][2]
                 else:
-                    arr2 = IntVector(next(gen_var), 0)
-                    arr_len = 0
-                    item_type = IntSort()
+                    raise ValueError('Type Error: Expected a list in the first argument of the function \'reverse\'')
 
                 arr = Array(next(gen_var), IntSort(), item_type)
                 if expr.subtrees[0].root not in list_types:
@@ -286,13 +278,14 @@ class VCGenerator(object):
                     return lst_eval[3]
                 elif is_string(lst_eval):
                     return Length(lst_eval)
+                else:
+                    raise ValueError('Type Error: Expected a list or a string in the first argument of the function \'len\'')
 
                 return vars_dict[str(lst_eval)][2]
 
             elif expr.root == 'append':
-                if len(expr.subtrees) == 0:
-                    arr = IntVector(next(gen_var), 0)
-                    return True, arr, IntSort(), 0
+                if len(expr.subtrees) <= 1:
+                    raise ValueError('Syntax Error: missing list argument in the function \'append\'')
 
                 # ideally, there should be two subtree.. and it should be a concrete list or a list variable and an item
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -307,15 +300,13 @@ class VCGenerator(object):
                     arr_len = eval_items[0][3]
                     item_type = eval_items[0][2]
                 else:
-                    arr2 = IntVector(next(gen_var), 0)
-                    arr_len = 0
-                    item_type = IntSort()
+                    raise ValueError('Type Error: Expected a list in the first argument of the function \'append\'')
 
                 # eval second argument: inserted_item
                 if expr.subtrees[1].root == 'ID':
                     var_name = expr.subtrees[1].subtrees[0].root
                     inserted_item = vars_dict[var_name][0]
-                elif expr.subtrees[1].root in list_types:
+                elif expr.subtrees[1].root in list_types or type(eval_items[1]) is tuple:
                     inserted_item = eval_items[1][1]
                 else:
                     inserted_item = eval_items[1]
@@ -335,8 +326,7 @@ class VCGenerator(object):
 
             elif expr.root == 'remove':
                 if len(expr.subtrees) == 0:
-                    arr = IntVector(next(gen_var), 0)
-                    return True, arr, IntSort(), 0
+                    raise ValueError('Syntax Error: missing list argument in the function \'remove\'')
 
                 # ideally, there should be two subtree.. and it should be a concrete list or a list variable and an item
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -350,10 +340,7 @@ class VCGenerator(object):
                     arr2 = eval_items[0][1]
                     arr_len = eval_items[0][3]
                     item_type = eval_items[0][2]
-                else:
-                    arr2 = IntVector(next(gen_var), 0)
-                    arr_len = 0
-                    item_type = IntSort()
+                    raise ValueError('Syntax Error: missing list argument in the function \'remove\'')
 
                 # eval second argument: removed_item
                 if expr.subtrees[1].root == 'ID':
@@ -365,17 +352,17 @@ class VCGenerator(object):
                     removed_item = eval_items[1]
 
                 arr = Array(next(gen_var), IntSort(), item_type)
-                # todo: edit this shit
+                # todo: edit this
                 if expr.subtrees[0].root not in list_types:
                     arr_value = And([arr[arr_len] == removed_item] + [arr[i] == arr2[i] for i in range(arr_len)])
                 else:
                     arr_value = And([eval_items[0][0], arr[arr_len] == removed_item] + [arr[i] == arr2[i] for i in range(arr_len)])
 
-                return arr_value, arr, item_type, arr_len+1
+                return arr_value, arr, item_type, arr_len-1
 
             elif expr.root == 'max':
                 if len(expr.subtrees) == 0:
-                    return 0
+                    raise ValueError('Syntax Error: missing integers list or two integers arguments in the function \'max\'')
 
                 # ideally, there should be two subtree.. containing two integers
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -407,11 +394,11 @@ class VCGenerator(object):
                         return items_vc, max_vc
 
                     return max_vc
-                return eval_items[0]
+                raise ValueError('Type Error: first argument of the function \'max\' must be of type integers list')
 
             elif expr.root == 'min':
-                if len(expr.subtrees) == 0:  # todo: should i remove this?
-                    return 0
+                if len(expr.subtrees) == 0:
+                    raise ValueError('Syntax Error: missing list or two integers argument in the function \'min\'')
 
                 # ideally, there should be two subtree.. containing two integers
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -425,7 +412,7 @@ class VCGenerator(object):
                         if expr.subtrees[0].root in list_types:
                             min_vc = And(eval_items[0][0], min_vc)
                         return min_vc, min_item
-                    return eval_items[0]
+                    raise ValueError('Type Error: first argument of the function \'min\' must be of type integers list')
 
                 elif expr_is_int(expr.subtrees[0], eval_items[0]) and expr_is_int(expr.subtrees[1], eval_items[1]):
                     item1 = eval_items[0]
@@ -441,13 +428,12 @@ class VCGenerator(object):
                     min_vc = simplify(If(item1 <= item2, item1, item2))
                     if items_vc is not None:
                         return items_vc, min_vc
-
                     return min_vc
-                return eval_items[0]
+                raise ValueError('Type Error: Expected integers list or two integers arguments in the function \'min\'')
 
             elif expr.root == 'index':
                 if len(expr.subtrees) <= 1:
-                    return -1
+                    raise ValueError('Syntax Error: missing arguments in the function \'index\'')
 
                 # ideally, there should be two subtree.. and it should be a concrete list or a list variable and an item
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -469,10 +455,11 @@ class VCGenerator(object):
 
                 elif is_string(eval_items[0]):
                     if not is_string(eval_items[1]):
-                        return -1
+                        raise ValueError(
+                            'Type Error: second argument of the function \'index\' must be of type str')
                     return simplify(IndexOf(eval_items[0], eval_items[1], 0))
 
-                return -1
+                raise ValueError('Type Error: first argument of the function \'index\' must be of type list or string')
 
             elif expr.root == 'all':
                 if len(expr.subtrees) == 1:
@@ -484,10 +471,13 @@ class VCGenerator(object):
                         var_name = expr.subtrees[0].subtrees[0].root
                         arr = vars_dict[var_name][0]
                         arr_len = vars_dict[var_name][2]
+                    else:
+                        raise ValueError(
+                            'Type Error: first argument of the function \'all\' must be of type bool list')
 
                     return And([arr[i] for i in range(0, arr_len)])
-                else:   # todo: should we raise an exception?
-                    raise ValueError('Syntax Error: wrong number of arguments in \'all\' function')
+                else:
+                    raise ValueError('Syntax Error: wrong number of arguments in function \'all\'')
 
             elif expr.root == 'any':
                 if len(expr.subtrees) == 1:
@@ -500,10 +490,11 @@ class VCGenerator(object):
                         arr = vars_dict[var_name][0]
                         arr_len = vars_dict[var_name][2]
                     else:
-                        return False  # todo: what should we do if the argument is not a list?
+                        raise ValueError(
+                            'Type Error: first argument of the function \'all\' must be of type bool list')
                     return Or([arr[i] for i in range(0, arr_len)])
-                else:   # todo: should we raise an exception?
-                    raise ValueError('Syntax Error: wrong number of arguments in \'all\' function')
+                else:
+                    raise ValueError('Syntax Error: wrong number of arguments in function \'any\'')
 
             elif expr.root == 'charAt':
                 # expects 2 arguments: a string and an index
@@ -518,7 +509,9 @@ class VCGenerator(object):
                         if final_vc is not None:
                             return simplify(And(final_vc)), simplify(SubString(eval_items[0], start_index, 1))
                         return simplify(SubString(eval_items[0], start_index, 1))
-                return StringVal('')
+                    raise ValueError('Type Error: the function \'charAt\' must be have 2 argument: type str, type int')
+
+                raise ValueError('Syntax Error: wrong number of arguments in function \'charAt\'')
 
             elif expr.root == 'substring':
                 # expects 3 arguments: a string, a starting index and an ending index
@@ -537,7 +530,9 @@ class VCGenerator(object):
                         if final_vc:
                             return simplify(And(final_vc)), simplify(SubString(eval_items[0], start_index, end_index - start_index))
                         return simplify(SubString(eval_items[0], start_index, end_index - start_index))
-                return StringVal('')
+                    raise ValueError('Type Error: the function \'substring\' must be have 3 argument: type str, type int, type int')
+
+                raise ValueError('Syntax Error: wrong number of arguments in function \'substring\'')
 
             elif expr.root == 'LIST_COMPREHENSION':
                 if len(expr.subtrees) == 3:
@@ -552,9 +547,9 @@ class VCGenerator(object):
                             comp_lst = vars_dict[arr_var_name][0]
                             comp_lst_type = comp_lst.range()
                             arr_len = vars_dict[arr_var_name][2]
-                        else:  # todo: raise exception
-                            arr = Array(next(gen_var), IntSort(), IntSort())
-                            return True, arr, IntSort(), 0
+                        else:
+                            raise ValueError(
+                                'Type Error: third argument of the list comprehension must be of type list')
 
                         id_backup = None
                         id_backup_tagged = None
@@ -593,14 +588,16 @@ class VCGenerator(object):
                             vars_dict.pop(var_name)
                             # vars_dict.pop(var_name + '_')
                         return And(total_vc), arr, item_type, arr_len
-
-                else:  # todo: raise exception
-                    arr = Array(next(gen_var), IntSort(), IntSort())
-                    return True, arr, IntSort(), 0
+                    else:
+                        raise ValueError(
+                            'Type Error: in the list comprehension: the 2nd argument must be a variable, and the 3rd argument must be of type list')
+                else:
+                    # we shouldn't reach here in this phase
+                    raise ValueError('Syntax Error: wrong format of list comprehension')
 
             elif expr.root == 'sum':
                 if len(expr.subtrees) == 0:
-                    return 0  # todo: raise exception
+                    raise ValueError('Syntax Error: wrong number of arguments in function \'sum\'')
 
                 # ideally, there should be two subtree.. containing two integers
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -616,9 +613,10 @@ class VCGenerator(object):
                         if expr.subtrees[0].root in list_types:
                             sum_vc = And(eval_items[0][0], sum_vc)
                         return sum_vc, lst_sum
-                    return eval_items[0]  # todo: raise exception
+                    raise ValueError(
+                        'Type Error: the argument of the function \'sum\' must be of type list')
 
-                if expr_is_int(expr.subtrees[0], eval_items[0]) and expr_is_int(expr.subtrees[1], eval_items[1]):
+                if all([expr_is_int(expr.subtrees[k], eval_items[k]) for k in range(len(expr.subtrees))]):
                     items_vc = []
                     items_num = len(expr.subtrees)
                     v = IntVector(next(gen_var), items_num)
@@ -631,24 +629,32 @@ class VCGenerator(object):
                     sum_vc = Sum(v)
                     return And(items_vc), sum_vc
 
-                return eval_items[0]  # todo: raise exception
+                raise ValueError(
+                    'Type Error: the arguments of the function \'sum\' must be of type int')
 
             elif expr.root == 'range':
                 # warning! we only accept integer values as arguments.. i.e. no variables
-                if len(expr.subtrees) == 1 and expr.subtrees[0].root == 'NUM':
-                    arr_len = expr.subtrees[0].subtrees[0].root
-                    arr = Array(next(gen_var), IntSort(), IntSort())
-                    arr_vc = And([arr[j] == j for j in range(arr_len)])
-                    return arr_vc, arr, IntSort(), arr_len
-                elif len(expr.subtrees) == 2 and expr.subtrees[0].root == 'NUM' and expr.subtrees[1].root == 'NUM':
-                    start_index = expr.subtrees[0].subtrees[0].root
-                    end_index = expr.subtrees[1].subtrees[0].root
-                    arr = Array(next(gen_var), IntSort(), IntSort())
-                    arr_vc = And([arr[j] == j for j in range(start_index, end_index)])
-                    return arr_vc, arr, IntSort(), end_index - start_index
-                else:  #todo: raise exception
-                    arr = Array(next(gen_var), IntSort(), IntSort())
-                    return True, arr, IntSort(), 0
+                if len(expr.subtrees) == 1:
+                    if expr.subtrees[0].root == 'NUM':
+                        arr_len = expr.subtrees[0].subtrees[0].root
+                        arr = Array(next(gen_var), IntSort(), IntSort())
+                        arr_vc = And([arr[j] == j for j in range(arr_len)])
+                        return arr_vc, arr, IntSort(), arr_len
+                    else:
+                        raise ValueError(
+                            'Type Error: the argument of the function \'range\' must be of type int (only literal integers not variables)')
+                elif len(expr.subtrees) == 2:
+                    if expr.subtrees[0].root == 'NUM' and expr.subtrees[1].root == 'NUM':
+                        start_index = expr.subtrees[0].subtrees[0].root
+                        end_index = expr.subtrees[1].subtrees[0].root
+                        arr = Array(next(gen_var), IntSort(), IntSort())
+                        arr_vc = And([arr[j] == j for j in range(start_index, end_index)])
+                        return arr_vc, arr, IntSort(), end_index - start_index
+                    else:
+                        raise ValueError(
+                            'Type Error: the arguments of the function \'range\' must be of type int (only literal integers not variables)')
+                else:
+                    raise ValueError('Syntax Error: wrong number of arguments in function \'range\'')
 
             return True
 
@@ -696,15 +702,16 @@ class VCGenerator(object):
                 elif len(t.subtrees) == 2:
                     return And(construct_tr(t.subtrees[0], collected_vars=collected_vars), construct_tr(t.subtrees[1], collected_vars=collected_vars))
 
-            elif t.root in ['=', '+=', '-=', '*=', '/=', '**=', '>', '<', '>=', "<="]:
-                return eval_expr(t, collected_vars=collected_vars)
-
-            # function call statements does not affect the program, assuming that they don't have side effects on the program variables
-            # function expressions do affect the program state.. we take care of them in eval_expr
-            elif t.root in ['INV_FUNC', 'reverse', 'len', 'append', 'remove']:
-                return True
-
-            return True
+            return eval_expr(t, collected_vars=collected_vars)
+            # elif t.root in ['=', '+=', '-=', '*=', '/=', '**=', '>', '<', '>=', '<=', '==', '!=']:
+            #     return eval_expr(t, collected_vars=collected_vars)
+            #
+            # # function call statements does not affect the program, assuming that they don't have side effects on the program variables
+            # # function expressions do affect the program state.. we take care of them in eval_expr
+            # elif t.root in ['INV_FUNC', 'reverse', 'len', 'append', 'remove']:
+            #     return True
+            #
+            # return True
 
 
         vars_dict = self.vars_dict.copy()
@@ -715,7 +722,8 @@ class VCGenerator(object):
 
 
 if __name__ == '__main__':
-    input_code = read_source_file("benchmarks/hybrid_benchmarks/test6_hybrid.py")
+    input_code = read_source_file("benchmarks/test_max.py")
+    # input_code = read_source_file("benchmarks/hybrid_benchmarks/test6_hybrid.py")
     # input_code = read_source_file("benchmarks/strings_benchmarks/test6_strings.py")
     # input_code = read_source_file("benchmarks/integers_benchmarks/test7_ints.py")
     pre_loop, loop_cond, loop_body, post_loop = VCGenerator()(input_code)
