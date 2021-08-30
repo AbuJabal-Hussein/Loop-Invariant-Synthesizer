@@ -10,6 +10,11 @@ from time import time
 from z3.z3types import Z3Exception
 from z3 import ExprRef
 
+def type_it(type_):
+    return type_
+
+def wrapper_for_multiProcess_list_types_isNested(type_):
+    return ArraySort(IntSort(), type_())
 
 def check_passing(generator, ast_chunks, x_, limit=-1):  # TODO: Rename
     res = []
@@ -96,6 +101,7 @@ class BottomUp:
         self.vars_dict_multi = dict()
         self.tagged_vars = dict()
         self.parse_prog_states()
+        print("self.vars_dict_multi: {}".format(self.vars_dict_multi))
         self.vc_gen = VCGenerator(self.vars_dict, should_tag=False)
         self.z3_to_str = dict()
 
@@ -305,24 +311,30 @@ class BottomUp:
 
         def arr_to_z3_1type(array_name, ds):
             sorts_dict = {int: IntSort(), bool: BoolSort(), str: StringSort()}
+            sorts_dict_nocall = {int: IntSort, bool: BoolSort, str: StringSort}
+            is_nested = False
             constrains = []
             arr_z3sort = None
             if type(ds[0]) is str:
                 arr_z3sort = sorts_dict[type(ds[0])]
                 arr = Array(array_name, IntSort(), arr_z3sort)
+                arr_z3sort = sorts_dict_nocall[type(ds[0])]
                 for i, data in enumerate(ds):
                     strval = StringVal(data)
                     constrains.append(arr[i] == strval)
             elif type(ds[0]) is list:
                 arr_z3sort_nested = sorts_dict[type(ds[0][0])]
+                arr_z3sort = sorts_dict_nocall[type(ds[0][0])]
                 arr = Array(array_name, IntSort(), ArraySort(IntSort(), arr_z3sort_nested))
-                constrains.append(VCGenerator()(array_name + "=" + ds)[0])
+                is_nested = True
+                constrains.append(VCGenerator()(array_name + "=" + str(ds))[0])
             else:
                 arr_z3sort = sorts_dict[type(ds[0])]
                 arr = Array(array_name, IntSort(), arr_z3sort)
+                arr_z3sort = sorts_dict_nocall[type(ds[0])]
                 for i, data in enumerate(ds):
                     constrains.append(arr[i] == data)
-            return constrains, arr_z3sort, arr
+            return constrains, arr_z3sort, arr, is_nested
 
         def to_z3type(v_, t_, val):
             if t_ == "int":
@@ -339,14 +351,22 @@ class BottomUp:
                     continue
                 curr_state_rules = list()
                 for var_data in line.split(sep='\x1F'):
-                    var, t, value = var_data.split(sep=' ', maxsplit=2)
+                    try:
+                        var, t, value = var_data.split(sep=' ', maxsplit=2)
+                    except ValueError:
+                        var, t = var_data.split(sep=' ', maxsplit=2)
+                        value = [] if t == 'list' else ''
                     if t == 'list':
                         data = ast.literal_eval(value)
                         if data:
-                            cons, z3sort, z3type = arr_to_z3_1type(var, data)
+                            cons, z3sort, z3type, is_nes = arr_to_z3_1type(var, data)
                             curr_state_rules = curr_state_rules + cons
                             self.vars_dict[var] = [z3type, z3sort, len(data)]
-                            self.vars_dict_multi[var] = [lambda _x_: Array(_x_, IntSort(), z3sort), True, len(data)]
+                            self.vars_dict_multi[var] = [z3sort,
+                                                         wrapper_for_multiProcess_list_types_isNested
+                                                         if is_nes
+                                                         else type_it,
+                                                         len(data)]
                     else:
 
                         z3type, z3value, z3sort, builder = to_z3type(var, t, value)

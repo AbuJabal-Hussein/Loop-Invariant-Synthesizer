@@ -111,6 +111,8 @@ class VCGenerator(object):
                 var_name = var_name if not tagged_id else var_name + '_'
                 if var_name in vars_dict:
                     return vars_dict[var_name][0]
+                if self.vars_noz3[var_name][2] > 1:
+                    return Array(var_name, IntSort(), self.vars_noz3[var_name][0]())
                 return self.vars_noz3[var_name][0](var_name)
 
             elif expr.root in ['NUM', 'BOOL']:
