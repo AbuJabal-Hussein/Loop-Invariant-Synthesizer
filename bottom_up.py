@@ -304,7 +304,7 @@ class BottomUp:
             return constrains, StringSort(), array_str
 
         def arr_to_z3_1type(array_name, ds):
-            sorts_dict = {int: IntSort(), bool: BoolSort(), str: StringSort(), list: ArraySort()}
+            sorts_dict = {int: IntSort(), bool: BoolSort(), str: StringSort()}
             constrains = []
             arr_z3sort = None
             if type(ds[0]) is str:
@@ -313,6 +313,10 @@ class BottomUp:
                 for i, data in enumerate(ds):
                     strval = StringVal(data)
                     constrains.append(arr[i] == strval)
+            elif type(ds[0]) is list:
+                arr_z3sort_nested = sorts_dict[type(ds[0][0])]
+                arr = Array(array_name, IntSort(), ArraySort(IntSort(), arr_z3sort_nested))
+                constrains.append(VCGenerator()(array_name + "=" + ds)[0])
             else:
                 arr_z3sort = sorts_dict[type(ds[0])]
                 arr = Array(array_name, IntSort(), arr_z3sort)
