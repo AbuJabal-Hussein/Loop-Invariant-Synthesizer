@@ -2,7 +2,7 @@ from syntax import PythonParser, read_source_file
 import operator
 from z3 import Int, ForAll, Implies, Not, And, Or, Solver, unsat, sat, IntSort, Bool, BoolSort, String, StringSort, \
     Array, IntVector, ArraySort, StringVal, ArithRef, ArrayRef, SeqRef, is_array, BoolRef, is_string_value, Length, \
-    is_string, is_int, If, IndexOf, Exists, simplify, Real, RealVal, Q, z3types, SubString, Sum
+    is_string, is_int, If, IndexOf, Exists, simplify, Real, RealVal, Q, z3types, SubString, Sum, is_bv, Unit
 
 OP = {'+': operator.add, '-': operator.sub,
       '*': operator.mul, '/': (lambda a, b: a / b),
@@ -276,12 +276,14 @@ class VCGenerator(object):
                 lst_eval = (eval_expr(expr.subtrees[0]))
                 if isinstance(lst_eval, list):
                     return lst_eval[3]
-                elif is_string(lst_eval):
+                elif is_string(lst_eval) or is_bv(lst_eval):
+                    if is_bv(lst_eval):
+                        lst_eval = Unit(lst_eval)
                     return Length(lst_eval)
+                elif expr.subtrees[0].root == 'ID':
+                    return vars_dict[str(lst_eval)][2]
                 else:
                     raise ValueError('Type Error: Expected a list or a string in the first argument of the function \'len\'')
-
-                return vars_dict[str(lst_eval)][2]
 
             elif expr.root == 'append':
                 if len(expr.subtrees) <= 1:
@@ -454,9 +456,11 @@ class VCGenerator(object):
                     return find_elem, elem_index
 
                 elif is_string(eval_items[0]):
-                    if not is_string(eval_items[1]):
+                    if not (is_string(eval_items[1]) or is_bv(eval_items[1])):
                         raise ValueError(
                             'Type Error: second argument of the function \'index\' must be of type str')
+                    if is_bv(eval_items[1]):
+                        eval_items[1] = Unit(eval_items[1])
                     return simplify(IndexOf(eval_items[0], eval_items[1], 0))
 
                 raise ValueError('Type Error: first argument of the function \'index\' must be of type list or string')

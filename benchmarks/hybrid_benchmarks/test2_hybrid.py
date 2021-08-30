@@ -3,7 +3,7 @@ from utilities.inv import __inv__
 # assume that myList is sorted in an ascending order
 
 myList = [18, 57, 96, 103, 132, 211, 231, 295, 296, 314, 315, 400, 441, 488, 613, 636, 766, 791, 830, 863]
-x = 40
+x = 132
 low = 0
 high = len(myList) - 1
 mid = 0

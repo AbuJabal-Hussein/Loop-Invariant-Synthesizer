@@ -451,6 +451,8 @@ class BottomUp:
             try:
                 inv = self.vc_gen.generate_vc(ast)[0]
                 print("str: {} ast: {} inv: {}".format(word, ast, inv))
+                s_ = Solver()
+                s_.add(inv)
             # except TypeError as err:
             #     continue
             #     # if "not supported between instances of " in err.args[0] \
