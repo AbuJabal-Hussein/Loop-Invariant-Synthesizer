@@ -271,6 +271,8 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--time-out', help="Max run time in minutes(7 Minutes default)\n"
                                                  "Max run time for each test in case --tests was supplied",
                         type=float, default=8.00, dest="timeout")
+    parser.add_argument('--restrictions_file', help="The name of the file containing the negative examples.", type=str,
+                        dest="restrictions_file")
 
     args = parser.parse_args()
     if args.timeout == 0:   # todo: check this

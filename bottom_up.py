@@ -8,6 +8,7 @@ from VC_Generation import *
 import multiprocessing
 from time import time
 from z3.z3types import Z3Exception
+from z3 import ExprRef
 
 
 def check_passing(generator, ast_chunks, x_, limit=-1):  # TODO: Rename
@@ -433,6 +434,8 @@ class BottomUp:
             except Exception:
                 continue
 
+            if not isinstance(inv, ExprRef):
+                continue
             if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
                 continue
             t = simplify(inv)
