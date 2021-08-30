@@ -201,13 +201,13 @@ class VCGenerator(object):
                 items_vc = []
                 if type(item_rhs) is tuple:
                     item_rhs = eval_rhs[1]
-                    items_vc = eval_rhs[0]
+                    items_vc.append(eval_rhs[0])
                 if type(item_lhs) is tuple:
                     item_lhs = eval_lhs[1]
                     items_vc.append(eval_lhs[0])
 
                 assign_vc = OP['=='](eval_lhs, OP[expr.root[:-1]](item_lhs, item_rhs))
-                if items_vc:
+                if len(items_vc) > 0:
                     assign_vc = And(items_vc + [assign_vc])
                 return assign_vc
 
@@ -245,8 +245,7 @@ class VCGenerator(object):
 
             elif expr.root == 'reverse':
                 if len(expr.subtrees) == 0:
-                    arr = IntVector(next(gen_var), 0)
-                    return True, arr, IntSort(), 0
+                    raise ValueError('Syntax Error: missing list argument in the function \'reverse\'')
 
                 # ideally, there should be only one subtree.. and it should be a concrete list or a list variable
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -261,9 +260,7 @@ class VCGenerator(object):
                     arr_len = eval_items[0][3]
                     item_type = eval_items[0][2]
                 else:
-                    arr2 = IntVector(next(gen_var), 0)
-                    arr_len = 0
-                    item_type = IntSort()
+                    raise ValueError('Type Error: Expected a list in the first argument of the function \'reverse\'')
 
                 arr = Array(next(gen_var), IntSort(), item_type)
                 if expr.subtrees[0].root not in list_types:
@@ -279,13 +276,14 @@ class VCGenerator(object):
                     return lst_eval[3]
                 elif is_string(lst_eval):
                     return Length(lst_eval)
+                else:
+                    raise ValueError('Type Error: Expected a list or a string in the first argument of the function \'len\'')
 
                 return vars_dict[str(lst_eval)][2]
 
             elif expr.root == 'append':
                 if len(expr.subtrees) == 0:
-                    arr = IntVector(next(gen_var), 0)
-                    return True, arr, IntSort(), 0
+                    raise ValueError('Syntax Error: missing list argument in the function \'append\'')
 
                 # ideally, there should be two subtree.. and it should be a concrete list or a list variable and an item
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -300,15 +298,13 @@ class VCGenerator(object):
                     arr_len = eval_items[0][3]
                     item_type = eval_items[0][2]
                 else:
-                    arr2 = IntVector(next(gen_var), 0)
-                    arr_len = 0
-                    item_type = IntSort()
+                    raise ValueError('Type Error: Expected a list in the first argument of the function \'append\'')
 
                 # eval second argument: inserted_item
                 if expr.subtrees[1].root == 'ID':
                     var_name = expr.subtrees[1].subtrees[0].root
                     inserted_item = vars_dict[var_name][0]
-                elif expr.subtrees[1].root in list_types:
+                elif expr.subtrees[1].root in list_types or type(eval_items[1]) is tuple:
                     inserted_item = eval_items[1][1]
                 else:
                     inserted_item = eval_items[1]
@@ -328,8 +324,7 @@ class VCGenerator(object):
 
             elif expr.root == 'remove':
                 if len(expr.subtrees) == 0:
-                    arr = IntVector(next(gen_var), 0)
-                    return True, arr, IntSort(), 0
+                    raise ValueError('Syntax Error: missing list argument in the function \'remove\'')
 
                 # ideally, there should be two subtree.. and it should be a concrete list or a list variable and an item
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -343,10 +338,7 @@ class VCGenerator(object):
                     arr2 = eval_items[0][1]
                     arr_len = eval_items[0][3]
                     item_type = eval_items[0][2]
-                else:
-                    arr2 = IntVector(next(gen_var), 0)
-                    arr_len = 0
-                    item_type = IntSort()
+                    raise ValueError('Syntax Error: missing list argument in the function \'remove\'')
 
                 # eval second argument: removed_item
                 if expr.subtrees[1].root == 'ID':
@@ -358,17 +350,17 @@ class VCGenerator(object):
                     removed_item = eval_items[1]
 
                 arr = Array(next(gen_var), IntSort(), item_type)
-                # todo: edit this shit
+                # todo: edit this
                 if expr.subtrees[0].root not in list_types:
                     arr_value = And([arr[arr_len] == removed_item] + [arr[i] == arr2[i] for i in range(arr_len)])
                 else:
                     arr_value = And([eval_items[0][0], arr[arr_len] == removed_item] + [arr[i] == arr2[i] for i in range(arr_len)])
 
-                return arr_value, arr, item_type, arr_len+1
+                return arr_value, arr, item_type, arr_len-1
 
             elif expr.root == 'max':
                 if len(expr.subtrees) == 0:
-                    return 0
+                    raise ValueError('Syntax Error: missing list or two integers argument in the function \'max\'')
 
                 # ideally, there should be two subtree.. containing two integers
                 eval_items = [eval_expr(expr.subtrees[i]) for i in range(len(expr.subtrees))]
@@ -709,7 +701,8 @@ class VCGenerator(object):
 
 
 if __name__ == '__main__':
-    input_code = read_source_file("benchmarks/hybrid_benchmarks/test6_hybrid.py")
+    input_code = read_source_file("benchmarks/test_max.py")
+    # input_code = read_source_file("benchmarks/hybrid_benchmarks/test6_hybrid.py")
     # input_code = read_source_file("benchmarks/strings_benchmarks/test6_strings.py")
     # input_code = read_source_file("benchmarks/integers_benchmarks/test7_ints.py")
     pre_loop, loop_cond, loop_body, post_loop = VCGenerator()(input_code)
