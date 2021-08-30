@@ -426,8 +426,12 @@ class BottomUp:
                 # if 'sort mismatch' in err.args[0] \
                 #         or "b\"Sort of polymorphic function" in err.args[0]:
                 #     continue
-                continue
                 # raise err
+                continue
+            except ValueError:
+                continue
+            except Exception:
+                continue
 
             if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
                 continue
@@ -502,7 +506,7 @@ class BottomUp:
                     inv_tagged = self.tag_and_convert(inv)
                     # inv_tagged = self.batch_to_z3([self.inv_tagged(inv)])[0]
                     print("Inv {} and Tagged {}".format(inv, inv_tagged))
-                    yield (inv, inv_tagged)
+                    yield (simplify(inv), simplify(inv_tagged))
             for tagged in self.tagged_vars:
                 del self.vars_dict[tagged]
             self.tagged_vars.clear()

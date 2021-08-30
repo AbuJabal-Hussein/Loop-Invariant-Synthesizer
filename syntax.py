@@ -12,7 +12,7 @@ class PythonParser(object):
              r" (?P<ASSOPPOWER>(\*\*=)) (?P<ASSOP>[+\-*/]=) (?P<POWER>(\*\*)) (?P<MULTDIV>[*/%]) (?P<PLUSMINUS>[+\-])  :" \
              r" (?P<RPAREN>\)) (?P<LSPAREN>\[) (?P<RSPAREN>\]) " \
              r" (?P<NOT>not) (?P<FALSE>False) (?P<TRUE>True) " \
-             r" (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<REMOVE>remove) (?P<MAX>max)" \
+             r" (?P<LEN>len) (?P<INV>__inv__) (?P<REVERSE>reverse) (?P<APPEND>append) (?P<MAX>max)" \
              r" (?P<MIN>min) (?P<INDEX>index) (?P<SUBSTRING>substring) (?P<INT>int) (?P<BOOLTYPE>bool) (?P<CHARAT>charAt) " \
              r" (?P<ALL>all) (?P<ANY>any) (?P<SUM>sum) (?P<RANGE>range)" \
              r" (?P<STR1>\'([^\n\r\"\'\\]|\\[rnt\"\'\\])*\') (?P<STR2>\"([^\n\r\"\'\\]|\\[rnt\"\'\\])*\") " \
@@ -62,14 +62,13 @@ class PythonParser(object):
     E   ->   E BI_REL E | LIST_E | LIST_COMPREHENSION | DEREF | FUNCS
     E   ->   E0
     
-    FUNCS -> LEN_FUNC | REVERSE_FUNC | APPEND_FUNC | REMOVE_FUNC | MAX_FUNC | MIN_FUNC | INDEX_FUNC | SUBSTRING_FUNC
+    FUNCS -> LEN_FUNC | REVERSE_FUNC | APPEND_FUNC | MAX_FUNC | MIN_FUNC | INDEX_FUNC | SUBSTRING_FUNC
     FUNCS -> SUM_FUNC | CHARAT_FUNC | ALL_FUNC | ANY_FUNC | RANGE_FUNC
     
     LEN_FUNC   -> LEN LPAREN E RPAREN
     INV_FUNC   -> INV LPAREN INV_ARGS RPAREN
     REVERSE_FUNC -> REVERSE CALL
     APPEND_FUNC -> APPEND CALL
-    REMOVE_FUNC -> REMOVE CALL
     MAX_FUNC -> MAX CALL
     MIN_FUNC -> MIN CALL
     INDEX_FUNC -> INDEX CALL

@@ -217,11 +217,6 @@ class VCGenerator(object):
                 eval_id = eval_expr(lst_id,
                                     tagged_id=False)  # maybe we should leave tagged_id without change (as set by the caller). this should allow a[i] to be on LHS if needed.. im not sure though
                 eval_index = eval_expr(index, tagged_id=False)
-                print('----------DEREF---------')
-                print(lst_id)
-                print(index)
-                print(eval_id)
-                print(eval_index)
                 if type(eval_index) is tuple:
                     return eval_index[0], eval_id[eval_index[1]]
                 return eval_id[eval_index]
@@ -694,15 +689,16 @@ class VCGenerator(object):
                 elif len(t.subtrees) == 2:
                     return And(construct_tr(t.subtrees[0], collected_vars=collected_vars), construct_tr(t.subtrees[1], collected_vars=collected_vars))
 
-            elif t.root in ['=', '+=', '-=', '*=', '/=', '**=', '>', '<', '>=', "<="]:
-                return eval_expr(t, collected_vars=collected_vars)
-
-            # function call statements does not affect the program, assuming that they don't have side effects on the program variables
-            # function expressions do affect the program state.. we take care of them in eval_expr
-            elif t.root in ['INV_FUNC', 'reverse', 'len', 'append', 'remove']:
-                return True
-
-            return True
+            return eval_expr(t, collected_vars=collected_vars)
+            # elif t.root in ['=', '+=', '-=', '*=', '/=', '**=', '>', '<', '>=', '<=', '==', '!=']:
+            #     return eval_expr(t, collected_vars=collected_vars)
+            #
+            # # function call statements does not affect the program, assuming that they don't have side effects on the program variables
+            # # function expressions do affect the program state.. we take care of them in eval_expr
+            # elif t.root in ['INV_FUNC', 'reverse', 'len', 'append', 'remove']:
+            #     return True
+            #
+            # return True
 
 
         vars_dict = self.vars_dict.copy()
