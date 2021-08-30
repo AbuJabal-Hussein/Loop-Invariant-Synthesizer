@@ -52,6 +52,13 @@ class VCGenerator(object):
             return Array(var_name, IntSort(), BoolSort())
         elif id_type == ArraySort(IntSort(), StringSort()):
             return Array(var_name, IntSort(), StringSort())
+        elif id_type == ArraySort(IntSort(), ArraySort(IntSort(), IntSort())):
+            return Array(var_name, IntSort(), ArraySort(IntSort(), IntSort()))
+        elif id_type == ArraySort(IntSort(), ArraySort(IntSort(), BoolSort())):
+            return Array(var_name, IntSort(), ArraySort(IntSort(), BoolSort()))
+        elif id_type == ArraySort(IntSort(), ArraySort(IntSort(), StringSort())):
+            return Array(var_name, IntSort(), ArraySort(IntSort(), StringSort()))
+
         return Int(var_name)
 
     # def break_down_loop(self, ast):
