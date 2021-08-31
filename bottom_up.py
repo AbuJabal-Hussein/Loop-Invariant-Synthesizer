@@ -325,6 +325,7 @@ class BottomUp:
             is_nested = False
             constrains = []
             arr_z3sort = None
+            arr_z3sort_called = None
             if type(ds[0]) is str:
                 arr_z3sort_called = sorts_dict[type(ds[0])]
                 arr = Array(array_name, IntSort(), arr_z3sort_called)
@@ -344,7 +345,7 @@ class BottomUp:
                 arr_z3sort = sorts_dict_nocall[type(ds[0])]
                 for i, data in enumerate(ds):
                     constrains.append(arr[i] == data)
-            return constrains, arr_z3sort, arr, is_nested, ArraySort(IntSort(), arr_z3sort_called if arr_z3sort_called else ArraySort(IntSort(), arr_z3sort_nested))
+            return constrains, arr_z3sort, arr, is_nested, ArraySort(IntSort(), arr_z3sort_called if arr_z3sort_called is not None else ArraySort(IntSort(), arr_z3sort_nested))
 
         def to_z3type(v_, t_, val):
             if t_ == "int":
