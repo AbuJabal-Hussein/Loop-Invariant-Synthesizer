@@ -32,7 +32,7 @@ def run_tests(directory='benchmarks\\',
     print("\n\n                         Starting Tests                         ")
 
     for subdir in subdirs:
-        subdir_stripped = subdir.split('\\')[:-1]
+        subdir_stripped = subdir.split('\\')[-1]
         print("Starting Test Suit: %s" % subdir_stripped)
         files: str = [f.name for f in os.scandir(subdir) if f.is_file()]
         test_files = [f for f in files if f.startswith("test")]
