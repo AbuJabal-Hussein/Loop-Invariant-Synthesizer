@@ -90,8 +90,14 @@ class BottomUp:
         self.reverse_dict = {"ID": [],
                              "RELOP": [">=", "!=", "<=", "==", ">", "<"],
                              "PLUSMINUS": ["+", "-"],
-                             "MULTDIV": ["*", "/"],
+                             "MULTDIV": ["*", "/", "%"],
+                             "POWER": ["**"],
                              "ASSOP": ["+=", "-=", "*=", "/="],
+                             "COMMA": [","],
+                             "LPAREN": ["("],
+                             "RPAREN": [")"],
+                             "LSPAREN": ["["],
+                             "RSPAREN": ["]"],
                              }
         self.funcs_id = {"AND": ["and"],
                          "OR": ["or"],
@@ -99,9 +105,11 @@ class BottomUp:
                          "LEN": ["len"],
                          "REVERSE": ["reverse"],
                          "APPEND": ["append"],
-                         "REMOVE": ["remove"],
                          "MAX": ["max"],
+                         "MIN": ["min"],
                          "INDEX": ["index"],
+                         "SUBSTRING": ["substring"],
+                         "CHARAT": ["charAt"],
                          }
         self.p = [rule.rhs[0] for rule in self.grammar["VAR"]]
         self.program_states_file = prog_states_file  # Where __inv__ prints
@@ -144,17 +152,23 @@ class BottomUp:
             return "".join(as_list[:index]) + var + "".join(as_list[index:])
         batch = list()
         local_rev_dic = deepcopy(self.reverse_dict)
+        print('---------------line 155---------------')
         for key in self.funcs_id.keys():
             local_rev_dic.setdefault(key, self.funcs_id[key])
             local_rev_dic[key] = self.funcs_id[key]
+        print('---------------line 159---------------')
         for key in self.reverse_dict.keys():
             local_rev_dic[key].extend(self.rev_dict.setdefault(key, []))
+        print('---------------line 162---------------')
         for key in self.used_tokens_dict.keys():
             if key not in local_rev_dic:
                 local_rev_dic[key] = self.used_tokens_dict[key].copy()
+        print('---------------line 166---------------')
         local_p = set(self.p.copy())
+        print('---------------line 168---------------')
         for current_form in local_p:
-            tags = current_form.tags.copy()
+            tags = current_form.tags
+            print('---------------line 171---------------')
             for tag in tags:
                 for l in self.grammar.rules.values():
                     for rule in l:
@@ -520,6 +534,7 @@ class BottomUp:
                     return
             i = i + 1
             self.z3_to_str = dict()
+            print('-----------before grow-------------')
             curr_batch = self.grow()
             print("-------------------%d-----------------" % i)
             print("Batch size: %d" % len(curr_batch))
@@ -563,7 +578,7 @@ class BottomUp:
                 if word.word in self.z3_to_str.values() or any(k in word.tags for k in self.grammar.rules.keys()):
                     self.p.append(word)
             self.p.extend(deepcopy(starting))
-            # print("P after yielding: {}".format(self.p))
+            print("P after yielding: {}".format(self.p))
         # print("THE EHHS:")
         # print(ehhs)
 
