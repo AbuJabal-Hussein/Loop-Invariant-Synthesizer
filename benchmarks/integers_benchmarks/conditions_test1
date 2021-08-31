@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : True
+post_cond : ((x % 12) == 0) and ((y % 12) == 0)

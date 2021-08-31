@@ -453,7 +453,7 @@ class BottomUp:
                 print("str: {} ast: {} inv: {}".format(word, ast, inv))
                 s_ = Solver()
                 s_.add(inv)
-                print("added to s!")
+
             # except TypeError as err:
             #     continue
             #     # if "not supported between instances of " in err.args[0] \

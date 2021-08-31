@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : True
+post_cond : (myList[0] == 20) and (myList[62] == 3481)
