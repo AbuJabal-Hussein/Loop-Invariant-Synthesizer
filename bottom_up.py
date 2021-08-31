@@ -9,6 +9,7 @@ import multiprocessing
 from time import time
 from z3.z3types import Z3Exception
 from z3 import ExprRef
+import psutil
 
 def type_it(type_):
     return type_
@@ -90,27 +91,30 @@ class BottomUp:
         self.reverse_dict = {"ID": [],
                              "RELOP": [">=", "!=", "<=", "==", ">", "<"],
                              "PLUSMINUS": ["+", "-"],
-                             "MULTDIV": ["*", "/", "%"],
-                             "POWER": ["**"],
-                             "ASSOP": ["+=", "-=", "*=", "/="],
+                             "MULTDIV": ["*", "/"],
                              "COMMA": [","],
                              "LPAREN": ["("],
                              "RPAREN": [")"],
                              "LSPAREN": ["["],
                              "RSPAREN": ["]"],
                              }
-        self.funcs_id = {"AND": ["and"],
-                         "OR": ["or"],
-                         "NOT": ["not"],
+        self.funcs_id = {
                          "LEN": ["len"],
                          "REVERSE": ["reverse"],
                          "APPEND": ["append"],
+                         "INDEX": ["index"],
                          "MAX": ["max"],
                          "MIN": ["min"],
-                         "INDEX": ["index"],
                          "SUBSTRING": ["substring"],
                          "CHARAT": ["charAt"],
                          }
+        # set up self.funcs_id to include only the funcs tha appears in the grammar
+        funcs_in_grammar = [rule.rhs[0] for rule in self.grammar["FUNCS"]] if self.grammar["FUNCS"] is not None else []
+        self.funcs_id = {k: self.funcs_id[k] for k in self.funcs_id if set(self.funcs_id[k]).intersection(set(funcs_in_grammar))}
+        self.funcs_id['AND'] = ["and"]
+        self.funcs_id['OR'] = ["or"]
+        self.funcs_id['NOT'] = ["not"]
+
         self.p = [rule.rhs[0] for rule in self.grammar["VAR"]]
         self.program_states_file = prog_states_file  # Where __inv__ prints
         self.program_states = list()  #
@@ -152,23 +156,19 @@ class BottomUp:
             return "".join(as_list[:index]) + var + "".join(as_list[index:])
         batch = list()
         local_rev_dic = deepcopy(self.reverse_dict)
-        print('---------------line 155---------------')
         for key in self.funcs_id.keys():
             local_rev_dic.setdefault(key, self.funcs_id[key])
             local_rev_dic[key] = self.funcs_id[key]
-        print('---------------line 159---------------')
         for key in self.reverse_dict.keys():
             local_rev_dic[key].extend(self.rev_dict.setdefault(key, []))
-        print('---------------line 162---------------')
         for key in self.used_tokens_dict.keys():
             if key not in local_rev_dic:
                 local_rev_dic[key] = self.used_tokens_dict[key].copy()
-        print('---------------line 166---------------')
         local_p = set(self.p.copy())
-        print('---------------line 168---------------')
         for current_form in local_p:
-            tags = current_form.tags
-            print('---------------line 171---------------')
+            if psutil.virtual_memory().percent > 92:
+                break
+            tags = current_form.tags.copy()
             for tag in tags:
                 for l in self.grammar.rules.values():
                     for rule in l:
@@ -184,15 +184,20 @@ class BottomUp:
                                 if any(t not in local_rev_dic for t in ts):
                                     continue
                                 tmp = [list(local_rev_dic[t]) for t in ts]
-                                tuples = list(itertools.product(*tmp))  # NEEDS FIX, debug and check value
-                                for tupl in tuples:
+                                # tuples = list(itertools.product(*tmp))  # NEEDS FIX, debug and check value
+                                for tupl in itertools.product(*tmp):
                                     new_form = Word(f(tupl, i, current_form.word), [lhs])
                                     batch.append(new_form)
                                     self.reverse_dict.setdefault(lhs, []).append(new_form.word)
+                                # print('++++ batch size: {}'.format(len(batch)))
+                        # print('**** batch size: {}'.format(len(batch)))
+                    # print('//// batch size: {}'.format(len(batch)))
+                # print('#### batch size: {}'.format(len(batch)))
 
                 if current_form.word in self.reverse_dict[tag]:
                     self.reverse_dict[tag].remove(current_form.word)
                 local_rev_dic[tag].remove(current_form.word)
+            # print('%%%% batch size: {}'.format(len(batch)))
             self.p.remove(current_form)
 
         #           Remove current_form.word from self.reverse_dict[tag]
@@ -451,6 +456,7 @@ class BottomUp:
     def batch_to_z3(self, batch):
         self.strings = []
         lst = []
+        print('..............starting batch_to_z3................')
         for code in batch:
             if self.start_time:
                 if time() - (self.start_time + self.timeout) >= 0:
@@ -465,7 +471,7 @@ class BottomUp:
                 continue
             try:
                 inv = self.vc_gen.generate_vc(ast)[0]
-                print("str: {} ast: {} inv: {}".format(word, ast, inv))
+                # print("str: {} ast: {} inv: {}".format(word, ast, inv))
                 s_ = Solver()
                 s_.add(inv)
 
@@ -498,6 +504,8 @@ class BottomUp:
             lst.append(inv)
             self.strings.append(word)
             # lst.append(self.vc_gen.generate_vc(ast))
+        print('..............ending batch_to_z3................')
+
         return lst
 
     # def inv_tagged(self, inv):
@@ -528,7 +536,7 @@ class BottomUp:
         # ehhs = dict()
         i = 0
         # ehh = 0
-        while True:
+        while psutil.virtual_memory().percent <= 92:
             if self.start_time:
                 if time() - (self.start_time + self.timeout) >= 0:
                     return
@@ -539,7 +547,7 @@ class BottomUp:
             print("-------------------%d-----------------" % i)
             print("Batch size: %d" % len(curr_batch))
             # print("grow:")
-            print(curr_batch)
+            # print(curr_batch)
             # print("self.reverse_dict:")
             # print(self.reverse_dict)
             # z3_batch = list(self.vc_gen.generate_vc(self.vc_gen.parser(b.word)) for b in curr_batch)
