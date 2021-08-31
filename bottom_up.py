@@ -66,7 +66,7 @@ def remove_equal(x, ys, z3_to_str):
 
 class BottomUp:
 
-    def __init__(self, grammar, tokens, prog_file, prog_states_file, timeout=-1):
+    def __init__(self, grammar, tokens, prog_file, prog_states_file, timeout=-1, examplesParsingMode=False):
         """
         Initialised with grammar and its tokens
         :param grammar: The Grammar. non-terminals on the right-hand side of production rules are delimited by spaces
@@ -74,6 +74,8 @@ class BottomUp:
         :param tokens: The Grammar's tokens
         """
         self.rev_dict = dict()
+        self.examplesParsingMode = examplesParsingMode
+        self.examples = {"True": [], "False": []}
         self.timeout = timeout
         self.start_time = time() if timeout > 0 else None
         self.strings = []
@@ -126,6 +128,9 @@ class BottomUp:
         print("self.vars_dict_multi: {}".format(self.vars_dict_multi))
         self.vc_gen = VCGenerator(self.vars_dict, should_tag=False)
         self.z3_to_str = dict()
+
+    def update_examples(self, examples):
+        self.examples = examples
 
     def extract_tokens(self, prog_file):
         tokens = set()
@@ -301,6 +306,18 @@ class BottomUp:
             s_.add(inv)
             if s_.check() == unsat:
                 return False
+        for pos_example in self.examples['True']:
+            s_ = Solver()
+            s_.add(pos_example)
+            s_.add(inv)
+            if s_.check() == unsat:
+                return False
+        for neg_example in self.examples['False']:
+            s_ = Solver()
+            s_.add(neg_example)
+            s_.add(inv)
+            if s_.check() == sat:
+                return False
         return True
 
     def get_parsed_states(self):
@@ -380,6 +397,11 @@ class BottomUp:
                 if not line:
                     continue
                 curr_state_rules = list()
+                if self.examplesParsingMode:
+                    if '' not in line:
+                        raise SyntaxError("'' expected but not found in examples files {}."
+                                          .format(self.program_states_file))
+                    line, boolean = line.split(sep='\x1F\x1F')
                 for var_data in line.split(sep='\x1F'):
                     try:
                         var, t, value = var_data.split(sep=' ', maxsplit=2)
@@ -403,6 +425,8 @@ class BottomUp:
                         curr_state_rules.append(z3type == z3value)
                         self.vars_dict[var] = [z3type, z3sort, 1]
                         self.vars_dict_multi[var] = [builder, True, 1]
+                if self.examplesParsingMode:
+                    self.examples[boolean].append(curr_state_rules)
                 self.program_states.append(curr_state_rules)
 
     def build_starting_id(self):

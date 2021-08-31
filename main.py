@@ -36,7 +36,7 @@ def get_grammar(file):
     return grammar.strip()
 
 
-def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None, timeout=-1):
+def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None, timeout=-1, examples_file=''):
     back_up = sys.stdout
     if omit_print:
         sys.stdout = open(os.devnull, 'w')
@@ -59,6 +59,13 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
              r" (?P<INDENT2>(\t\t)) (?P<INDENT>(\t))  =".split()
     bt = BottomUp(grammar=GRAMMAR, prog_states_file=prog_states_file, tokens=TOKENS, prog_file=program_file,
                   timeout=timeout)
+    if examples_file:
+        bt_examples = BottomUp(grammar=GRAMMAR, prog_states_file=examples_file, tokens=TOKENS, prog_file=program_file,
+                               timeout=timeout, examplesParsingMode=True)
+        examples = deepcopy(bt_examples.examples)
+        bt.update_examples(examples)
+
+    print("Bottom up's program states parsing: {}".format(bt.program_states))
     pre_cond, post_cond = get_pre_post_conds(conds_file)
     pre_cond = bt.batch_to_z3([pre_cond])
     post_cond = bt.batch_to_z3([post_cond])
@@ -277,8 +284,8 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--time-out', help="Max run time in minutes(7 Minutes default)\n"
                                                  "Max run time for each test in case --tests was supplied",
                         type=float, default=8.00, dest="timeout")
-    parser.add_argument('--restrictions_file', help="The name of the file containing the negative examples.", type=str,
-                        dest="restrictions_file")
+    parser.add_argument('--examples-file', '-e', help="The name of the file containing the negative examples.",
+                        type=str, dest="examples_file")
 
     args = parser.parse_args()
     if args.timeout == 0:
@@ -290,6 +297,6 @@ if __name__ == '__main__':
     if not args.program_file or not args.grammar_file:
         print("error: the following arguments are required: --program/-p, --grammar/-g  OR --tests")
         exit(1)
-    negative_examples = get_neg_examples(args.restrictions_file) if args.restrictions_file else []
 
-    run(args.program_file, args.grammar_file, args.conds_file, timeout=args.timeout * 60)
+    run(args.program_file, args.grammar_file, args.conds_file, timeout=args.timeout * 60,
+        examples_file=args.examples_file)

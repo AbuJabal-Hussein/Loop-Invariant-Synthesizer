@@ -44,6 +44,12 @@ def run_tests(directory='benchmarks\\',
             cond_file = "conditions_" + test_num
             if (cond_file not in files) or (grammar_file not in files):
                 print("Either '{}' or 'grammar' file was not found under ".format(cond_file, subdir_stripped))
+                print("*******Test Result: {}".format("Files Missing"))
+                print("-------------------------------")
+                continue
+            examples_file_name = test_num + "_examples"
+            examples_file = examples_file_name if examples_file_name in files else ''
+
             manager = multiprocessing.Manager()
             my_dict = {"result": "Before Start"}
             res_dict = manager.dict(my_dict.copy())
@@ -54,7 +60,8 @@ def run_tests(directory='benchmarks\\',
                                                                "conds_file": subdir_wsep + cond_file,
                                                                "omit_print": True,
                                                                "res_dict": res_dict,
-                                                               "timeout": LOCAL_TIMEOUT})
+                                                               "timeout": LOCAL_TIMEOUT,
+                                                               "examples_file": examples_file})
             proc.start()
             proc.join(LOCAL_TIMEOUT * 1.1)
 
