@@ -5,7 +5,7 @@ import os
 
 
 def run_tests(directory='benchmarks\\',
-              timeout=8):
+              timeout=8, examples_file=''):
     print("\n\n-------------------------Checking Files-------------------------")
     print("timeout=%f"%timeout)
     subdirs = [f.path for f in os.scandir(directory) if f.is_dir()]
