@@ -100,6 +100,13 @@ class BottomUp:
                              "LSPAREN": ["["],
                              "RSPAREN": ["]"],
                              }
+        # self.syntax_const_terminals = {
+        #                      "COMMA": [","],
+        #                      "LPAREN": ["("],
+        #                      "RPAREN": [")"],
+        #                      "LSPAREN": ["["],
+        #                      "RSPAREN": ["]"],
+        #                      }
         self.funcs_id = {
                          "LEN": ["len"],
                          "REVERSE": ["reverse"],
@@ -118,6 +125,9 @@ class BottomUp:
         self.funcs_id['NOT'] = ["not"]
 
         self.p = [rule.rhs[0] for rule in self.grammar["VAR"]]
+        # we don't need the "VAR" rules in the grammar anymore
+        # self.grammar.remove_rule("VAR")
+
         self.program_states_file = prog_states_file  # Where __inv__ prints
         self.program_states = list()  #
         self.arrays_dict = {}  # {Array_name -> {index -> (arr_name, index)} }
@@ -177,6 +187,7 @@ class BottomUp:
             for tag in tags:
                 for l in self.grammar.rules.values():
                     for rule in l:
+                        # print('rule : {}'.format(rule))
                         lhs, symbols = rule.lhs, rule.rhs
                         if len(rule.rhs) == 1 and rule.rhs[0] == tag:
                                 new_form = Word(current_form.word, [lhs])
@@ -184,16 +195,22 @@ class BottomUp:
                                 self.reverse_dict.setdefault(lhs, []).append(new_form.word)
                                 continue
                         for i, symbol in enumerate(rule.rhs):
+
                             if symbol == tag:
                                 ts = rule.rhs[:i] + rule.rhs[i+1:]
                                 if any(t not in local_rev_dic for t in ts):
                                     continue
                                 tmp = [list(local_rev_dic[t]) for t in ts]
+                                # print('len(tmp) = {}'.format(len(tmp)))
+                                # print(ts)
                                 # tuples = list(itertools.product(*tmp))  # NEEDS FIX, debug and check value
+                                qwe = 0
                                 for tupl in itertools.product(*tmp):
+                                    qwe += 1
                                     new_form = Word(f(tupl, i, current_form.word), [lhs])
                                     batch.append(new_form)
                                     self.reverse_dict.setdefault(lhs, []).append(new_form.word)
+                                # print('qwe = {}'.format(qwe))
                                 # print('++++ batch size: {}'.format(len(batch)))
                         # print('**** batch size: {}'.format(len(batch)))
                     # print('//// batch size: {}'.format(len(batch)))
@@ -300,22 +317,28 @@ class BottomUp:
         return ready
 
     def check_sat(self, inv):
+        print('inv = {}'.format(inv))
         for state in self.program_states:
             s_ = Solver()
             s_.add(state)
             s_.add(inv)
+            # print('s_.check({})_state = {}'.format(state, s_.check()))
+
             if s_.check() == unsat:
                 return False
         for pos_example in self.examples['True']:
             s_ = Solver()
             s_.add(pos_example)
             s_.add(inv)
+            # print('s_.check({})_true = {}'.format(pos_example, s_.check()))
+
             if s_.check() == unsat:
                 return False
         for neg_example in self.examples['False']:
             s_ = Solver()
-            s_.add(neg_example)
-            s_.add(inv)
+            s_.add(And(And(neg_example), inv))
+            # s_.add(inv)
+            # print('s_.check({})_false = {}'.format(neg_example, s_.check()))
             if s_.check() == sat:
                 return False
         return True
