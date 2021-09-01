@@ -2,7 +2,7 @@ from syntax import PythonParser, read_source_file
 import operator
 from z3 import Int, ForAll, Implies, Not, And, Or, Solver, unsat, sat, IntSort, Bool, BoolSort, String, StringSort, \
     Array, IntVector, ArraySort, StringVal, ArithRef, ArrayRef, SeqRef, is_array, BoolRef, is_string_value, Length, \
-    is_string, is_int, If, IndexOf, Exists, simplify, Real, RealVal, Q, z3types, SubString, Sum, is_bv, Unit
+    is_string, is_int, If, IndexOf, Exists, simplify, Real, RealVal, Q, z3types, SubString, Sum, is_bv, Unit, BitVecRef
 
 OP = {'+': operator.add, '-': operator.sub,
       '*': operator.mul, '/': (lambda a, b: a / b),
@@ -132,8 +132,8 @@ class VCGenerator(object):
             elif expr.root in OP:
                 expr1 = expr.subtrees[0]
                 expr2 = expr.subtrees[1]
-                expr1_eval = eval_expr(expr1, tagged_id=tagged_id)
-                expr2_eval = eval_expr(expr2, tagged_id=tagged_id)
+                expr1_eval = eval_expr(expr1, tagged_id=False)
+                expr2_eval = eval_expr(expr2, tagged_id=False)
                 items_vc = None
                 item1 = expr1_eval
                 item2 = expr2_eval
@@ -203,20 +203,24 @@ class VCGenerator(object):
                 expr1 = expr.subtrees[0]
                 expr2 = expr.subtrees[1]
                 eval_lhs = eval_expr(expr1, tagged_id=True)
+                eval_lhs_untagged = eval_expr(expr1, tagged_id=False)
                 eval_rhs = eval_expr(expr2, tagged_id=False)
                 if collected_vars is not None:
                     collected_vars.append(OP['=='](eval_lhs, eval_expr(expr1, tagged_id=False)))
                 item_rhs = eval_rhs
                 item_lhs = eval_lhs
+                item_lhs_untagged = eval_lhs_untagged
                 items_vc = []
                 if type(item_rhs) is tuple:
                     item_rhs = eval_rhs[1]
                     items_vc.append(eval_rhs[0])
                 if type(item_lhs) is tuple:
                     item_lhs = eval_lhs[1]
+                    item_lhs_untagged = eval_lhs_untagged[1]
                     items_vc.append(eval_lhs[0])
+                    items_vc.append(eval_lhs_untagged[0])
 
-                assign_vc = OP['=='](eval_lhs, OP[expr.root[:-1]](item_lhs, item_rhs))
+                assign_vc = OP['=='](item_lhs, OP[expr.root[:-1]](item_lhs_untagged, item_rhs))
                 if len(items_vc) > 0:
                     assign_vc = And(items_vc + [assign_vc])
                 return assign_vc
@@ -228,8 +232,14 @@ class VCGenerator(object):
                                     tagged_id=False)  # maybe we should leave tagged_id without change (as set by the caller). this should allow a[i] to be on LHS if needed.. im not sure though
                 eval_index = eval_expr(index, tagged_id=False)
                 if type(eval_index) is tuple:
-                    return eval_index[0], eval_id[eval_index[1]]
-                return eval_id[eval_index]
+                    deref = eval_id[eval_index][1]
+                    if isinstance(deref, BitVecRef):
+                        deref = Unit(deref)
+                    return eval_index[0], deref
+                deref = eval_id[eval_index]
+                if isinstance(deref, BitVecRef):
+                    deref = Unit(deref)
+                return deref
 
             elif expr.root == 'LIST_E':
                 if len(expr.subtrees) == 0:
@@ -685,8 +695,13 @@ class VCGenerator(object):
                     return construct_tr(t.subtrees[0], collected_vars=collected_vars)
                 # this case happens when the while is the last statement in the program
                 if t.subtrees[1].root == 'while':
+                    post_loop_vars = []
                     res = construct_tr(t.subtrees[0], collected_vars=collected_vars)
-                    tr_lists[1] = construct_tr(t.subtrees[1], collected_vars=collected_vars)
+                    tr_lists[1] = construct_tr(t.subtrees[1], collected_vars=post_loop_vars)
+                    print('77777777777777777777777777')
+                    print(post_loop_vars)
+                    if post_loop_vars:
+                        tr_lists[2] = And(post_loop_vars)
                     return res
                 return And(construct_tr(t.subtrees[0], collected_vars=collected_vars), construct_tr(t.subtrees[1], collected_vars=collected_vars))
             elif t.root == 'while':
@@ -729,14 +744,12 @@ class VCGenerator(object):
         vars_dict = self.vars_dict.copy()
         tr_lists = [True, [True, True], True]
         tr_lists[0] = construct_tr(ast)
-        if tr_lists[2]:
-            tr_lists[2] = And([vars_dict[a + '_'][0] == vars_dict[a][0] for a in vars_dict if not a.endswith('_')])
         return tr_lists[0], tr_lists[1][0], tr_lists[1][1], tr_lists[2]
 
 
 
 if __name__ == '__main__':
-    input_code = read_source_file("benchmarks/test_max.py")
+    input_code = read_source_file("unit_tests/test_max.py")
     # input_code = read_source_file("benchmarks/hybrid_benchmarks/test6_hybrid.py")
     # input_code = read_source_file("benchmarks/strings_benchmarks/test6_strings.py")
     # input_code = read_source_file("benchmarks/integers_benchmarks/test7_ints.py")

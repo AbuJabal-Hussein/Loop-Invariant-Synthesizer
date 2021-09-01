@@ -8,6 +8,6 @@ listOrder = [4, 6, 5, 2, 9, 0, 3, 7, 1, 8]
 sortedList = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
 i = 0
 while i < len(myList):
-	# __inv__(myList=myList, listOrder=listOrder, sortedList=sortedList, i=i)
+	__inv__(myList=myList, listOrder=listOrder, sortedList=sortedList, i=i)
 	sortedList[i] = myList[index(listOrder, i)]
 	i += 1

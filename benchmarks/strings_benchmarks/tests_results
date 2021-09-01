@@ -1,0 +1,31 @@
+Starting Test Suit: strings_benchmarks
+-------------------------------
+Starting Test: test1_strings.py
+Finished Test: test1_strings.py		Total Time: 66.01011347770691
+*******Test Result: Timed Out
+-------------------------------
+-------------------------------
+Starting Test: test2_strings.py
+Finished Test: test2_strings.py		Total Time: 61.95880317687988
+*******Test Result: Timed Out
+-------------------------------
+-------------------------------
+Starting Test: test3_strings.py
+Finished Test: test3_strings.py		Total Time: 61.45712971687317
+*******Test Result: Timed Out
+-------------------------------
+-------------------------------
+Starting Test: test4_strings.py
+Finished Test: test4_strings.py		Total Time: 29.752235174179077
+*******Test Result: Found inv: Not(str.<(str1, str1))
+-------------------------------
+-------------------------------
+Starting Test: test5_strings.py
+Finished Test: test5_strings.py		Total Time: 38.811853885650635
+*******Test Result: Found inv: Not(str.<(str1, str1))
+-------------------------------
+-------------------------------
+Starting Test: test6_strings.py
+Finished Test: test6_strings.py		Total Time: 60.98981952667236
+*******Test Result: Timed Out
+-------------------------------

@@ -133,6 +133,13 @@ class BottomUp:
                              "LSPAREN": ["["],
                              "RSPAREN": ["]"],
                              }
+        # self.syntax_const_terminals = {
+        #                      "COMMA": [","],
+        #                      "LPAREN": ["("],
+        #                      "RPAREN": [")"],
+        #                      "LSPAREN": ["["],
+        #                      "RSPAREN": ["]"],
+        #                      }
         self.funcs_id = {
                          "LEN": ["len"],
                          "REVERSE": ["reverse"],
@@ -151,6 +158,9 @@ class BottomUp:
         self.funcs_id['NOT'] = ["not"]
 
         self.p = [rule.rhs[0] for rule in self.grammar["VAR"]]
+        # we don't need the "VAR" rules in the grammar anymore
+        self.grammar.remove_rule("VAR")
+
         self.program_states_file = prog_states_file  # Where __inv__ prints
         self.program_states = list()  #
         self.arrays_dict = {}  # {Array_name -> {index -> (arr_name, index)} }
@@ -334,22 +344,28 @@ class BottomUp:
         return ready
 
     def check_sat(self, inv):
+        print('inv = {}'.format(inv))
         for state in self.program_states:
             s_ = Solver()
             s_.add(state)
             s_.add(inv)
+            # print('s_.check({})_state = {}'.format(state, s_.check()))
+
             if s_.check() == unsat:
                 return False
         for pos_example in self.examples['True']:
             s_ = Solver()
             s_.add(pos_example)
             s_.add(inv)
+            # print('s_.check({})_true = {}'.format(pos_example, s_.check()))
+
             if s_.check() == unsat:
                 return False
         for neg_example in self.examples['False']:
             s_ = Solver()
-            s_.add(neg_example)
-            s_.add(inv)
+            s_.add(And(And(neg_example), inv))
+            # s_.add(inv)
+            # print('s_.check({})_false = {}'.format(neg_example, s_.check()))
             if s_.check() == sat:
                 return False
         return True

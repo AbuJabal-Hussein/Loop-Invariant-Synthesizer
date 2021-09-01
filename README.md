@@ -12,9 +12,10 @@ This option can be added regardless of run mode, meaning it can be added whether
 
 # The Input Format
 To successfully run the tool on a python code, you need to provide the python code you wish to synthesis, the grammar (which must be a sub Grammar of the grammar found in [syntax.py](https://github.com/AbuJabal-Hussein/Loop-Invariant-Synthesizer/blob/dev/syntax.py) [^1] ), and conditions file, which can be used to prove properties. 
+In addition, you may like to provide the synthesizer with extra examples (unreachable states) to narrow down the invariant search, the examples files serves for that.
 To successfully run: 
 
-    python main.py --program <input program file> --grammar <Grammar file> --conditions <conditions file> [-t NUM]
+    python main.py --program <input program file> --grammar <Grammar file> --conditions <conditions file> [-t NUM] [--examples-file <examples files>]
 ### The input program:
 The input program needs to have at most 1 loop. A call to \___inv_\__() must be added, while the arguments are each variable used as follows:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; _- Assuming a,b,c are the used variables in the code -_
@@ -30,23 +31,46 @@ The conditions files must follow the following format:
     post_cond : <cond>
 Examples: 
 
+1)
 
-```
-1.
     pre_cond : True
     post_cond : isPalindrome == True
-```
 
-```
-2.
+2)  
+``` 
     pre_cond : True
     post_cond : all([myList[i] == str1[i] for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) and (myList[47] == 'program')
-```
+ ```
+
+### The Examples File:
+You can provide unreachable states to the synthesizer, to narrow down the invariant search. It can be done by writing states in the examples file.
+The name convention to follow when using in **tests/benchmarks**: `examples_test<number>`  eg. `examples_test1` 
+While the states format (the 'syntax' inside the file) should follow the convention (please cover all the input python code's variables in each state(row)):
+var_name type value\<unprintable character>var_name type value\<unprintable character>\<unprintable character>\<True or False> 
+
+    i int 6x int 20y int 0False
+    i int 0x int 16y int 0True
+**Note**: Make sure you copy the examples from the code segment above, as there is unprintable separator between the tuples.
+_You can take a look at [benchmarks/integers_benchmarks/examples_test2](https://github.com/AbuJabal-Hussein/Loop-Invariant-Synthesizer/blob/dev/benchmarks/integers_benchmarks/examples_test2)_ 
+ 
+
+# Design and Implementation
+
+Our tool can either be run in tests mode, or your own run mode, either case, when running a test case or your own run, we use a wrapper, which prepares the required data -such as the conditions and both the positive and negative examples-, and passes it to the two main parts of the tool Bottom up class, and VC_Generation class, where the magic happens and new invariant candidates are born and sent back to the wrapper. The wrapper is responsible for the final check of the invariant candidates before the true invariant that passes the Horn constraints is sent into the world.
+
+## Bottom Up Class
+Prior to the bottom up  enumeration on the grammar to find the invariant, the class extracts the used variables in the input python code, to minimize creation or irrelevant variant candidates in the grow stage of the bottom up enumeration.
+In addition, the bottom up class is responsible for the timing out while creating and checking different variant candidates.
+In addition, the Bottom up class parses the states created by the \_\_inv()__ function.
+The Bottom up class uses VC_Generation to translate string invariant candidates into z3 objects.
+
+### Bottom Up Enumeration
+A list of variables, operations, function names and different tokens and terminals is prepared which will be used in every iteration of grow added to what was created before 
 
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE4NDQyOTcyNjYsODIzNTE1NTM0LDk0Nj
-IxODcwNiwxNDUwNTQ1OTEyLDE1MzU3Nzc1OTIsMTkwMjgyOTgy
-NywxNDg4OTczOTA3LC0xMTI3NjEzNjk4LC0xMTc5NjUxNzgsLT
-E1NDg2MDU4NjRdfQ==
+eyJoaXN0b3J5IjpbNTUzOTAwNDE0LDE4NjUzNjkzMTcsLTE4ND
+QyOTcyNjYsODIzNTE1NTM0LDk0NjIxODcwNiwxNDUwNTQ1OTEy
+LDE1MzU3Nzc1OTIsMTkwMjgyOTgyNywxNDg4OTczOTA3LC0xMT
+I3NjEzNjk4LC0xMTc5NjUxNzgsLTE1NDg2MDU4NjRdfQ==
 -->

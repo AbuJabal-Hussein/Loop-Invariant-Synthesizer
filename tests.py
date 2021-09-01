@@ -92,10 +92,10 @@ def run_tests(directory='benchmarks\\',
                                                                        "timeout": LOCAL_TIMEOUT,
                                                                        "examples_file": examples_file})
                     proc.start()
-                    try:
-                        proc.join(LOCAL_TIMEOUT * 1.2)
-                    except Exception:
-                        pass
+                    # proc.join(LOCAL_TIMEOUT * 1.1)
+                    # we should just wait for proc to terminate.. no need for timeout here
+                    proc.join()
+
                     test_end_time = time()
                     res = res_dict["result"]
                     if res == "No Inv found or timed out" or (test_end_time - test_start_time) > LOCAL_TIMEOUT:

@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : all([myList[i] == str1[i] for i in range(61) and (myList[strLen] == 'program')
+post_cond : all([myList[i] == str1[i] for i in range(61)]) and (myList[strLen] == 'program')

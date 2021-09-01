@@ -61,6 +61,10 @@ class Grammar:
 
         if self.start_symbol is None: self.start_symbol = lhs
 
+    def remove_rule(self, lhs):
+        if lhs in self.rules:
+            self.rules.pop(lhs)
+
     @staticmethod
     def from_file(filename):
         '''Returns a Grammar instance created from a text file.

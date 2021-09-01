@@ -6,6 +6,13 @@ import os
 # import timeout_decorator
 import sys
 
+def get_neg_examples(file):
+    negative_examples = []
+    with open(file, "r") as reader:
+        content = reader.read().strip()
+        for line in content.split(sep='\n'):
+            negative_examples.append(line)
+
 
 def get_pre_post_conds(file):
     post_cond_ = pre_cond_ = ""
@@ -64,10 +71,10 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
     post_cond = bt.str_to_z3(post_cond)
     pre_cond = pre_cond[0] if pre_cond else True
     post_cond = post_cond[0] if post_cond else True
-    # print('-------pre and post cond--------')
-    # print(pre_cond)
-    # print(post_cond)
-    # exit(77)
+    if type(post_cond) is not bool:
+        tagged_post_cond = bt.tag_and_convert(post_cond)
+    else:
+        tagged_post_cond = post_cond
     # print("Vars:")
     # print(bt.p)
     # print("Tokens:")
@@ -86,7 +93,7 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
         inv, inv_tagged = b
         lst = [Implies(And(pre_cond, pre_loop), inv_tagged),
                Implies(And(inv, loop_cond, loop_body), inv_tagged),
-               Implies(And(inv, Not(loop_cond), post_loop), post_cond)]
+               Implies(And(inv, Not(loop_cond), post_loop), tagged_post_cond)]
         solver.add(Not(And(lst)))
         if solver.check() == unsat:
             sys.stdout = back_up
