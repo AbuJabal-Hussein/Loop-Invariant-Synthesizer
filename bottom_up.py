@@ -126,7 +126,7 @@ class BottomUp:
 
         self.p = [rule.rhs[0] for rule in self.grammar["VAR"]]
         # we don't need the "VAR" rules in the grammar anymore
-        # self.grammar.remove_rule("VAR")
+        self.grammar.remove_rule("VAR")
 
         self.program_states_file = prog_states_file  # Where __inv__ prints
         self.program_states = list()  #
@@ -535,9 +535,10 @@ class BottomUp:
             #     #     continue
             #     # raise err
             #     continue
-            # except ValueError:
+            # except ValueError as err:
+            #     print(err)
             #     continue
-            except Exception:
+            except Exception as err:
                 continue
 
             if not isinstance(inv, ExprRef):

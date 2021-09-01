@@ -2,7 +2,7 @@ from syntax import PythonParser, read_source_file
 import operator
 from z3 import Int, ForAll, Implies, Not, And, Or, Solver, unsat, sat, IntSort, Bool, BoolSort, String, StringSort, \
     Array, IntVector, ArraySort, StringVal, ArithRef, ArrayRef, SeqRef, is_array, BoolRef, is_string_value, Length, \
-    is_string, is_int, If, IndexOf, Exists, simplify, Real, RealVal, Q, z3types, SubString, Sum, is_bv, Unit
+    is_string, is_int, If, IndexOf, Exists, simplify, Real, RealVal, Q, z3types, SubString, Sum, is_bv, Unit, BitVecRef
 
 OP = {'+': operator.add, '-': operator.sub,
       '*': operator.mul, '/': (lambda a, b: a / b),
@@ -232,8 +232,14 @@ class VCGenerator(object):
                                     tagged_id=False)  # maybe we should leave tagged_id without change (as set by the caller). this should allow a[i] to be on LHS if needed.. im not sure though
                 eval_index = eval_expr(index, tagged_id=False)
                 if type(eval_index) is tuple:
-                    return eval_index[0], eval_id[eval_index[1]]
-                return eval_id[eval_index]
+                    deref = eval_id[eval_index][1]
+                    if isinstance(deref, BitVecRef):
+                        deref = Unit(deref)
+                    return eval_index[0], deref
+                deref = eval_id[eval_index]
+                if isinstance(deref, BitVecRef):
+                    deref = Unit(deref)
+                return deref
 
             elif expr.root == 'LIST_E':
                 if len(expr.subtrees) == 0:
