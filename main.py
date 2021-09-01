@@ -6,13 +6,6 @@ import os
 # import timeout_decorator
 import sys
 
-def get_neg_examples(file):
-    negatives = []
-    with open(file, "r") as reader:
-        content = reader.read().strip()
-        for line in content.split(sep='\n'):
-            negative_examples.append(line)
-
 
 def get_pre_post_conds(file):
     post_cond_ = pre_cond_ = ""
@@ -97,7 +90,7 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
         solver.add(Not(And(lst)))
         if solver.check() == unsat:
             sys.stdout = back_up
-            print("Found inv: {}".format(inv))
+            # print("Found inv: {}".format(inv))
             if res_dict:
                 res_dict["result"] = ("Found inv: {}".format(inv))
             # print("res_dict['result']: {}".format(res_dict["result"]))
