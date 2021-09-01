@@ -46,23 +46,56 @@ def check_passing(generator, ast_chunks, x_, limit=-1):  # TODO: Rename
     return res
 
 
-def remove_equal(x, ys, z3_to_str):
-    """
+def chunkIt(seq, split):
+    avg = len(seq) / float(split)
+    out = []
+    last = 0.0
 
-    :param x: what to compare to
-    :param ys: List[(index, z3 object)]
-    :return:
-    """
-    adder = []
-    for i, y in ys:
-        s_ = Solver()
-        s_.add(Not(x == y))
-        if s_.check() == unsat:  # proved to be equal
+    while last < len(seq):
+        out.append(seq[int(last):int(last + avg)])
+        last += avg
+
+    return out
+
+
+def check_batch_by_z3(generator, batch, limit=-1):
+    strings = []
+    lst = []
+    print('..............starting batch_to_z3................')
+    s_ = Solver()
+    for code in batch:
+        if time() > limit > 0:
+            return []
+        if type(code) is not str:
+            word = code.word
+        else:
+            word = code
+        inv = None
+        ast = generator.parser(word)
+        if ast is None or ast.depth < 2:
             continue
-        adder.append(z3_to_str[y])
-    # print(multiprocessing.current_process().ident)
-    return adder
+        try:
+            inv = generator.generate_vc(ast)[0]
+            # print("str: {} ast: {} inv: {}".format(word, ast, inv))
+            s_.add(inv)
 
+        except Exception:
+            continue
+
+        if not isinstance(inv, ExprRef):
+            continue
+        if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
+            continue
+        t = simplify(inv)
+        if type(t) == BoolRef and (t == True or t == False):  # simply equal to True (e.g. y<=y)
+            continue
+        # self.z3_to_str[inv] = word
+        # lst.append(inv)
+        strings.append(word)
+        # lst.append(self.vc_gen.generate_vc(ast))
+    print('..............ending batch_to_z3................')
+
+    return strings
 
 class BottomUp:
 
@@ -127,7 +160,7 @@ class BottomUp:
         self.parse_prog_states()
         print("self.vars_dict_multi: {}".format(self.vars_dict_multi))
         self.vc_gen = VCGenerator(self.vars_dict, should_tag=False)
-        self.z3_to_str = dict()
+        # self.z3_to_str = dict()
 
     def update_examples(self, examples):
         self.examples = examples
@@ -174,34 +207,44 @@ class BottomUp:
             if psutil.virtual_memory().percent > 92:
                 break
             tags = current_form.tags.copy()
-            for tag in tags:
-                for l in self.grammar.rules.values():
-                    for rule in l:
-                        lhs, symbols = rule.lhs, rule.rhs
-                        if len(rule.rhs) == 1 and rule.rhs[0] == tag:
-                                new_form = Word(current_form.word, [lhs])
+            # for tag in tags:
+            for l in self.grammar.rules.values():
+                for rule in l:
+                    lhs, symbols = rule.lhs, rule.rhs
+                    if len(rule.rhs) == 1 and rule.rhs[0] in tags:
+                            tag = rule.rhs[0]
+                            new_form = Word(current_form.word, [lhs])
+                            batch.append(new_form)
+                            self.reverse_dict.setdefault(lhs, []).append(new_form.word)
+                            if current_form.word in self.reverse_dict[tag]:
+                                self.reverse_dict[tag].remove(current_form.word)
+                            if current_form.word in local_rev_dic[tag]:
+                                local_rev_dic[tag].remove(current_form.word)
+                            continue
+                    for i, symbol in enumerate(rule.rhs):
+                        if symbol in tags:
+                            ts = rule.rhs[:i] + rule.rhs[i+1:]
+                            if any(t not in local_rev_dic for t in ts):
+                                continue
+                            tmp = [list(local_rev_dic[t]) for t in ts]
+                            # tuples = list(itertools.product(*tmp))  # NEEDS FIX, debug and check value
+                            for tupl in itertools.product(*tmp):
+                                new_form = Word(f(tupl, i, current_form.word), [lhs])
                                 batch.append(new_form)
                                 self.reverse_dict.setdefault(lhs, []).append(new_form.word)
-                                continue
-                        for i, symbol in enumerate(rule.rhs):
-                            if symbol == tag:
-                                ts = rule.rhs[:i] + rule.rhs[i+1:]
-                                if any(t not in local_rev_dic for t in ts):
-                                    continue
-                                tmp = [list(local_rev_dic[t]) for t in ts]
-                                # tuples = list(itertools.product(*tmp))  # NEEDS FIX, debug and check value
-                                for tupl in itertools.product(*tmp):
-                                    new_form = Word(f(tupl, i, current_form.word), [lhs])
-                                    batch.append(new_form)
-                                    self.reverse_dict.setdefault(lhs, []).append(new_form.word)
-                                # print('++++ batch size: {}'.format(len(batch)))
-                        # print('**** batch size: {}'.format(len(batch)))
-                    # print('//// batch size: {}'.format(len(batch)))
-                # print('#### batch size: {}'.format(len(batch)))
-
-                if current_form.word in self.reverse_dict[tag]:
-                    self.reverse_dict[tag].remove(current_form.word)
-                local_rev_dic[tag].remove(current_form.word)
+                            for tag in tags:
+                                if current_form.word in self.reverse_dict[tag]:
+                                    self.reverse_dict[tag].remove(current_form.word)
+                                if current_form.word in local_rev_dic[tag]:
+                                    local_rev_dic[tag].remove(current_form.word)
+                            # print('++++ batch size: {}'.format(len(batch)))
+                    # print('**** batch size: {}'.format(len(batch)))
+                # print('//// batch size: {}'.format(len(batch)))
+            # print('#### batch size: {}'.format(len(batch)))
+            # for tag in tags:
+            #     if current_form.word in self.reverse_dict[tag]:
+            #         self.reverse_dict[tag].remove(current_form.word)
+            #     local_rev_dic[tag].remove(current_form.word)
             # print('%%%% batch size: {}'.format(len(batch)))
             self.p.remove(current_form)
 
@@ -233,16 +276,6 @@ class BottomUp:
     def elim_equivalents_multi_proccess(batch: list, generator, vars_dict, timeout=-1):
         started = time()
         total_size = len(batch)
-        def chunkIt(seq, split):
-            avg = len(seq) / float(split)
-            out = []
-            last = 0.0
-
-            while last < len(seq):
-                out.append(seq[int(last):int(last + avg)])
-                last += avg
-
-            return out
 
         # profiler.write("\n\n------------------Starting new Elim-------------------------\n")
         ready = []
@@ -275,6 +308,7 @@ class BottomUp:
             pool.join()
             x_ast = generator.parser(x)
             # print(x)
+            print("appending: {}\nAST:{}".format(x, x_ast))
             ready.append(generator.generate_vc(x_ast)[0])
             batched = []
             for async_res in async_results:
@@ -457,7 +491,7 @@ class BottomUp:
         return p
 
     def tag_and_convert(self, inv):
-        inv_str = self.z3_to_str[inv]
+        inv_str = "".format(inv)
         ast = deepcopy(self.vc_gen.parser(inv_str))
         adding = dict()
         for node in PreorderWalk(ast):
@@ -477,60 +511,79 @@ class BottomUp:
             self.tagged_vars[k] = elem
         return self.vc_gen.generate_vc(ast)[0]
 
-    def batch_to_z3(self, batch):
+    def str_to_z3(self, code):
         self.strings = []
         lst = []
-        print('..............starting batch_to_z3................')
-        for code in batch:
-            if self.start_time:
-                if time() - (self.start_time + self.timeout) >= 0:
-                    return []
-            if type(code) is not str:
-                word = code.word
-            else:
-                word = code
-            inv = None
-            ast = self.vc_gen.parser(word)
-            if ast is None or ast.depth < 2:
-                continue
-            try:
-                inv = self.vc_gen.generate_vc(ast)[0]
-                # print("str: {} ast: {} inv: {}".format(word, ast, inv))
-                s_ = Solver()
-                s_.add(inv)
+        s_ = Solver()
+        if self.start_time:
+            if time() - (self.start_time + self.timeout) >= 0:
+                return []
+        if type(code) is not str:
+            word = code.word
+        else:
+            word = code
+        inv = None
+        ast = self.vc_gen.parser(word)
+        if ast is None or ast.depth < 2:
+            return []
+        try:
+            inv = self.vc_gen.generate_vc(ast)[0]
+            # print("str: {} ast: {} inv: {}".format(word, ast, inv))
+            s_.add(inv)
 
-            # except TypeError as err:
-            #     continue
-            #     # if "not supported between instances of " in err.args[0] \
-            #     #         or "unsupported operand type(s) for" in err.args[0]:
-            #     #     continue
-            #     # else:
-            #     #     raise err
-            # except Z3Exception as err:
-            #     # if 'sort mismatch' in err.args[0] \
-            #     #         or "b\"Sort of polymorphic function" in err.args[0]:
-            #     #     continue
-            #     # raise err
-            #     continue
-            # except ValueError:
-            #     continue
-            except Exception:
-                continue
+        # except TypeError as err:
+        #     continue
+        #     # if "not supported between instances of " in err.args[0] \
+        #     #         or "unsupported operand type(s) for" in err.args[0]:
+        #     #     continue
+        #     # else:
+        #     #     raise err
+        # except Z3Exception as err:
+        #     # if 'sort mismatch' in err.args[0] \
+        #     #         or "b\"Sort of polymorphic function" in err.args[0]:
+        #     #     continue
+        #     # raise err
+        #     continue
+        # except ValueError:
+        #     continue
+        except Exception:
+            return []
 
-            if not isinstance(inv, ExprRef):
-                continue
-            if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
-                continue
-            t = simplify(inv)
-            if type(t) == BoolRef and (t == True or t == False):  # simply equal to True (e.g. y<=y)
-                continue
-            self.z3_to_str[inv] = word
-            lst.append(inv)
-            self.strings.append(word)
-            # lst.append(self.vc_gen.generate_vc(ast))
-        print('..............ending batch_to_z3................')
+        if not isinstance(inv, ExprRef):
+            return []
+        if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
+            return []
+        t = simplify(inv)
+        if type(t) == BoolRef and (t == True or t == False):  # simply equal to True (e.g. y<=y)
+            return []
+        # self.z3_to_str[inv] = word
+        # lst.append(inv)
+        self.strings.append(word)
+        # lst.append(self.vc_gen.generate_vc(ast))
+        return inv
 
-        return lst
+    def batch_to_z3(self, batch):
+        num = max(multiprocessing.cpu_count() - 1, 8)
+        timeout = self.start_time + self.timeout
+        pool = multiprocessing.Pool(processes=num)
+        chunks = chunkIt(batch, num)
+        async_results = []
+        for chunk in chunks:
+            # proc = multiprocessing.Process(target=remove_equal, args=[x, chunk, lambda d_: batched.append(d_)])
+            # proc.start()
+            # processes.append(proc)
+            # res = pool.apply_async(remove_equal, [x, chunk, z3_to_str])
+            res = pool.apply_async(check_batch_by_z3,
+                                   [VCGenerator(vars_noz3=deepcopy(self.vars_dict_multi), should_tag=False), chunk, timeout])
+            async_results.append(res)
+
+        pool.close()
+        pool.join()
+        for async_res in async_results:
+            results = async_res.get()
+            for res in results:
+                self.strings.append(res)
+        return
 
     # def inv_tagged(self, inv):
     #     inv_str = self.z3_to_str[inv]
@@ -565,7 +618,7 @@ class BottomUp:
                 if time() - (self.start_time + self.timeout) >= 0:
                     return
             i = i + 1
-            self.z3_to_str = dict()
+            # self.z3_to_str = dict()
             print('-----------before grow-------------')
             curr_batch = self.grow()
             print("-------------------%d-----------------" % i)
@@ -575,12 +628,13 @@ class BottomUp:
             # print("self.reverse_dict:")
             # print(self.reverse_dict)
             # z3_batch = list(self.vc_gen.generate_vc(self.vc_gen.parser(b.word)) for b in curr_batch)
-            z3_batch = self.batch_to_z3(curr_batch)
+            self.batch_to_z3(curr_batch)
             if self.start_time:
                 if time() - (self.start_time + self.timeout) >= 0:
                     return
-            print("converted %d:" % len(z3_batch))
-            print(z3_batch)
+            print("converted %d:" % len(self.strings))
+            print(self.strings)
+            print("self.vars_dict_multi: {}".format(self.vars_dict_multi))
             if self.start_time:
                 z3_batch = self.elim_equivalents_multi_proccess(self.strings, self.vc_gen, self.vars_dict_multi,
                                                                 self.start_time + self.timeout)
@@ -607,7 +661,8 @@ class BottomUp:
             # print("curr_batch after yielding: {}".format(curr_batch))
             # print("self.z3_to_str.values() after yielding: {}".format(self.z3_to_str.values()))
             for word in curr_batch:
-                if word.word in self.z3_to_str.values() or any(k in word.tags for k in self.grammar.rules.keys()):
+                # if word.word in self.z3_to_str.values() or any(k in word.tags for k in self.grammar.rules.keys()):
+                if any(k in word.tags for k in self.grammar.rules.keys()):
                     self.p.append(word)
             self.p.extend(deepcopy(starting))
             print("P after yielding: {}".format(self.p))
