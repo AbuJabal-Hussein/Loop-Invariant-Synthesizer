@@ -53,7 +53,6 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
     bt = BottomUp(grammar=GRAMMAR, prog_states_file=prog_states_file, tokens=TOKENS, prog_file=program_file,
                   timeout=timeout)
     if examples_file:
-        print("examples file: %s" % examples_file, file=back_up)
         bt_examples = BottomUp(grammar=GRAMMAR, prog_states_file=examples_file, tokens=TOKENS, prog_file=program_file,
                                timeout=timeout, examplesParsingMode=True)
         examples = deepcopy(bt_examples.examples)

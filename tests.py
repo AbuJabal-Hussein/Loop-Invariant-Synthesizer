@@ -12,9 +12,9 @@ def timer(start, end):
 
 
 def table_print_res(results_dict: dict, times_dict: dict):
-    headers = ['Test_name, Result, Time']
+    headers = ['Test name', 'Result', 'Time']
     row_format = "{:>15}" * (len(headers))
-    print(row_format.format("", *headers))
+    print(row_format.format(*headers))
     for benchmark in results_dict.keys():
         for test in results_dict[benchmark].keys():
             row = (results_dict[benchmark][test], times_dict[benchmark][test])
@@ -92,8 +92,10 @@ def run_tests(directory='benchmarks\\',
                                                                        "timeout": LOCAL_TIMEOUT,
                                                                        "examples_file": examples_file})
                     proc.start()
-                    proc.join(LOCAL_TIMEOUT * 1.1)
-
+                    try:
+                        proc.join(LOCAL_TIMEOUT * 1.2)
+                    except Exception:
+                        pass
                     test_end_time = time()
                     res = res_dict["result"]
                     if res == "No Inv found or timed out" or (test_end_time - test_start_time) > LOCAL_TIMEOUT:
