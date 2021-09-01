@@ -12,9 +12,9 @@ def timer(start, end):
 
 
 def table_print_res(results_dict: dict, times_dict: dict):
-    headers = ['Test_name, Result, Time']
+    headers = ['Test name', 'Result', 'Time']
     row_format = "{:>15}" * (len(headers))
-    print(row_format.format("", *headers))
+    print(row_format.format(*headers))
     for benchmark in results_dict.keys():
         for test in results_dict[benchmark].keys():
             row = (results_dict[benchmark][test], times_dict[benchmark][test])
