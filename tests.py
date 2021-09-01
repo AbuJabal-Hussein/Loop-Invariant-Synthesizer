@@ -39,7 +39,7 @@ def run_tests(directory='benchmarks\\',
         # print("Starting Test Suit: %s" % subdir)
         print("Checking Suit: %s" % subdir_stripped)
         files: str = [f.name for f in os.scandir(subdir) if f.is_file()]
-        test_files = [f for f in files if f.startswith("test")]
+        test_files = [f for f in files if f.startswith("test") and f != "tests_results"]
         print("Test Files Found: %s\n\n" % test_files)
         # print("Test Files Found: %s\n\n" % test_files)
         if grammar_file not in files:
@@ -78,7 +78,7 @@ def run_tests(directory='benchmarks\\',
                         times_dictionary[subdir_stripped][test_file] = -1.0
                         continue
                     examples_file_name = "examples_" + test_num
-                    examples_file = examples_file_name if examples_file_name in files else ''
+                    examples_file = subdir_wsep + examples_file_name if examples_file_name in files else ''
 
                     manager = multiprocessing.Manager()
                     my_dict = {"result": "Before Start"}
@@ -90,7 +90,7 @@ def run_tests(directory='benchmarks\\',
                                                                        "omit_print": True,
                                                                        "res_dict": res_dict,
                                                                        "timeout": LOCAL_TIMEOUT,
-                                                                       "examples_file": subdir_wsep + examples_file})
+                                                                       "examples_file": examples_file})
                     proc.start()
                     proc.join(LOCAL_TIMEOUT * 1.1)
 
