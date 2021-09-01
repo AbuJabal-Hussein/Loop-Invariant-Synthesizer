@@ -86,7 +86,7 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
         inv, inv_tagged = b
         lst = [Implies(And(pre_cond, pre_loop), inv_tagged),
                Implies(And(inv, loop_cond, loop_body), inv_tagged),
-               Implies(And(inv, post_loop), post_cond)]
+               Implies(And(inv, Not(loop_cond), post_loop), post_cond)]
         solver.add(Not(And(lst)))
         if solver.check() == unsat:
             sys.stdout = back_up

@@ -729,6 +729,8 @@ class VCGenerator(object):
         vars_dict = self.vars_dict.copy()
         tr_lists = [True, [True, True], True]
         tr_lists[0] = construct_tr(ast)
+        if tr_lists[2]:
+            tr_lists[2] = And([vars_dict[a + '_'][0] == vars_dict[a][0] for a in vars_dict if not a.endswith('_')])
         return tr_lists[0], tr_lists[1][0], tr_lists[1][1], tr_lists[2]
 
 
