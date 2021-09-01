@@ -51,9 +51,8 @@ var_name type value\<unprintable character>var_name type value\<unprintable char
     i int 6x int 20y int 0False
     i int 0x int 16y int 0True
 **Note**: Make sure you copy the examples from the code segment above, as there is unprintable separator between the tuples.
-_You can take a look at [benchmarks/integers_benchmarks/examples_test2](https://github.com/AbuJabal-Hussein/Loop-Invariant-Synthesizer/blob/dev/benchmarks/integers_benchmarks/examples_test2)_  <= 
-[^1]:  Make sure you are on the latest version
-
+_You can take a look at [benchmarks/integers_benchmarks/examples_test2](https://github.com/AbuJabal-Hussein/Loop-Invariant-Synthesizer/blob/dev/benchmarks/integers_benchmarks/examples_test2)_ 
+ 
 
 # Design and Implementation
 
@@ -67,9 +66,11 @@ The Bottom up class uses VC_Generation to translate string invariant candidates 
 
 ### Bottom Up Enumeration
 A list of variables, operations, function names and different tokens and terminals is prepared which will be used in every iteration of grow added to what was created before 
+
+[^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTg2NTM2OTMxNywtMTg0NDI5NzI2Niw4Mj
-M1MTU1MzQsOTQ2MjE4NzA2LDE0NTA1NDU5MTIsMTUzNTc3NzU5
-MiwxOTAyODI5ODI3LDE0ODg5NzM5MDcsLTExMjc2MTM2OTgsLT
-ExNzk2NTE3OCwtMTU0ODYwNTg2NF19
+eyJoaXN0b3J5IjpbNTUzOTAwNDE0LDE4NjUzNjkzMTcsLTE4ND
+QyOTcyNjYsODIzNTE1NTM0LDk0NjIxODcwNiwxNDUwNTQ1OTEy
+LDE1MzU3Nzc1OTIsMTkwMjgyOTgyNywxNDg4OTczOTA3LC0xMT
+I3NjEzNjk4LC0xMTc5NjUxNzgsLTE1NDg2MDU4NjRdfQ==
 -->
