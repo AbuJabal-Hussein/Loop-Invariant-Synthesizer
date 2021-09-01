@@ -1,41 +1,41 @@
 Starting Test Suit: integers_benchmarks
 -------------------------------
 Starting Test: test0_ints.py
-Finished Test: test0_ints.py		Total Time: 60.83852815628052
+Finished Test: test0_ints.py		Total Time: 61.347578287124634
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test1_ints.py
-Finished Test: test1_ints.py		Total Time: 61.42791414260864
+Finished Test: test1_ints.py		Total Time: 61.35988092422485
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test2_ints.py
-Finished Test: test2_ints.py		Total Time: 61.62554335594177
+Finished Test: test2_ints.py		Total Time: 61.255682945251465
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test3_ints.py
-Finished Test: test3_ints.py		Total Time: 62.162654399871826
+Finished Test: test3_ints.py		Total Time: 62.004345655441284
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test4_ints.py
-Finished Test: test4_ints.py		Total Time: 66.01526641845703
-*******Test Result: Timed Out
+Finished Test: test4_ints.py		Total Time: 2.563669204711914
+*******Test Result: Before Start
 -------------------------------
 -------------------------------
 Starting Test: test5_ints.py
-Finished Test: test5_ints.py		Total Time: 61.38114905357361
+Finished Test: test5_ints.py		Total Time: 61.33169507980347
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test7_ints.py
-Finished Test: test7_ints.py		Total Time: 61.029478549957275
+Finished Test: test7_ints.py		Total Time: 61.264806509017944
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test8_ints.py
-Finished Test: test8_ints.py		Total Time: 60.857086181640625
+Finished Test: test8_ints.py		Total Time: 61.26734519004822
 *******Test Result: Timed Out
 -------------------------------

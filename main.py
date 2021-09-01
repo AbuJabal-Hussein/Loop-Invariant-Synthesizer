@@ -69,8 +69,8 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
     pre_cond, post_cond = get_pre_post_conds(conds_file)
     pre_cond = bt.str_to_z3(pre_cond)
     post_cond = bt.str_to_z3(post_cond)
-    pre_cond = pre_cond[0] if pre_cond else True
-    post_cond = post_cond[0] if post_cond else True
+    pre_cond = pre_cond if pre_cond is not None else True
+    post_cond = post_cond if post_cond is not None else True
     if type(post_cond) is not bool:
         tagged_post_cond = bt.tag_and_convert(post_cond)
     else:
