@@ -60,6 +60,7 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
     bt = BottomUp(grammar=GRAMMAR, prog_states_file=prog_states_file, tokens=TOKENS, prog_file=program_file,
                   timeout=timeout)
     if examples_file:
+        print("examples file: %s" % examples_file, file=back_up)
         bt_examples = BottomUp(grammar=GRAMMAR, prog_states_file=examples_file, tokens=TOKENS, prog_file=program_file,
                                timeout=timeout, examplesParsingMode=True)
         examples = deepcopy(bt_examples.examples)
@@ -95,11 +96,9 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
                Implies(And(inv, loop_cond, loop_body), inv_tagged),
                Implies(And(inv, Not(loop_cond), post_loop), tagged_post_cond)]
         solver.add(Not(And(lst)))
-        print('-------------------------------------------------')
-        print(Not(And(lst)))
         if solver.check() == unsat:
             sys.stdout = back_up
-            print("Found inv: {}".format(inv))
+            # print("Found inv: {}".format(inv))
             if res_dict:
                 res_dict["result"] = ("Found inv: {}".format(inv))
             # print("res_dict['result']: {}".format(res_dict["result"]))
