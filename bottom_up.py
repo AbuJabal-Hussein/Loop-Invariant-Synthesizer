@@ -148,6 +148,10 @@ class BottomUp:
                          "MIN": ["min"],
                          "SUBSTRING": ["substring"],
                          "CHARAT": ["charAt"],
+                         "SUM": ["sum"],
+                         "RANGE": ["range"],
+                         "ALL": ["all"],
+                         "ANY": ["any"],
                          }
         # set up self.funcs_id to include only the funcs tha appears in the grammar
         funcs_in_grammar = [rule.rhs[0] for rule in self.grammar["FUNCS"]] if self.grammar["FUNCS"] is not None else []
@@ -293,7 +297,7 @@ class BottomUp:
         print("num CPUS: %d" % num)
         while len(batch) > 1:
             if time() > timeout > 0:
-                return []
+                return [], {}
             # start_while = time()
             # x = deepcopy(batch[0]).translate(ctx)
             pool = multiprocessing.Pool(processes=num)
