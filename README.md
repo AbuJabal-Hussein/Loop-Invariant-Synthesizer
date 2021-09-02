@@ -1,3 +1,5 @@
+
+
 # Loop-Invariant-Synthesizer
 This is the final project of the Software Synthesis and Automated Reasoning course
 
@@ -61,16 +63,22 @@ Our tool can either be run in tests mode, or your own run mode, either case, whe
 ## Bottom Up Class
 Prior to the bottom up  enumeration on the grammar to find the invariant, the class extracts the used variables in the input python code, to minimize creation or irrelevant variant candidates in the grow stage of the bottom up enumeration.
 In addition, the bottom up class is responsible for the timing out while creating and checking different variant candidates.
-In addition, the Bottom up class parses the states created by the \_\_inv()__ function.
-The Bottom up class uses VC_Generation to translate string invariant candidates into z3 objects.
+The Bottom up class parses the states created by the \_\_inv()__ function, and uses VC_Generation to translate string invariant candidates into z3 objects in different stages of the algorithm.
 
 ### Bottom Up Enumeration
-A list of variables, operations, function names and different tokens and terminals is prepared which will be used in every iteration of grow added to what was created before 
+A list of variables, operations, function names and different tokens and terminals is prepared which will be used in the grow step in every iteration.
+Inside the loop, we start with the grow step, to produce more invariant candidates by iterating over each previously created candidate and placing it in a suitable terminal/non-terminal in the rhs of a rule to produce a lhs using other previously created candidates or starting terminal, etc.
+Once a candidate is used in all possible slots, it is removed from further uses to prevent duplicates, as possible.
+Afterwards, to reduce the size of the batch that eliminate will have to work on, the batch produced by grow is filtered, by trying to build ast of the variant candidate and then converting it to a z3 object, to drop meaningless code and trivial variants. This part is done in **parallel** using **multiprocessing**.
+The remaining candidates are then passed to eliminate the equivalent pairs (or more) of them, this is also done in parallel, where for each element, we iterate on the batch and keep only the candidates unequal to the current element, and so on.
+After all that, the remaining unique candidates are tested against the states, positive and the negative examples, if it produces sat and/or unsat as expected, it is tagged and yielding back (along with the tagged version) to the wrapper for the last check, and if it passes, then we found our invariant. 
+Otherwise, we check the next candidate and so on until all of them failed the wrapper's checks, so we go to the next iteration, and so on.
 
 [^1]:  Make sure you are on the latest version
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNTUzOTAwNDE0LDE4NjUzNjkzMTcsLTE4ND
-QyOTcyNjYsODIzNTE1NTM0LDk0NjIxODcwNiwxNDUwNTQ1OTEy
-LDE1MzU3Nzc1OTIsMTkwMjgyOTgyNywxNDg4OTczOTA3LC0xMT
-I3NjEzNjk4LC0xMTc5NjUxNzgsLTE1NDg2MDU4NjRdfQ==
+eyJoaXN0b3J5IjpbLTM5ODA5MTU5NCw1NTM5MDA0MTQsMTg2NT
+M2OTMxNywtMTg0NDI5NzI2Niw4MjM1MTU1MzQsOTQ2MjE4NzA2
+LDE0NTA1NDU5MTIsMTUzNTc3NzU5MiwxOTAyODI5ODI3LDE0OD
+g5NzM5MDcsLTExMjc2MTM2OTgsLTExNzk2NTE3OCwtMTU0ODYw
+NTg2NF19
 -->
