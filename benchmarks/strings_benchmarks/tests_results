@@ -1,13 +1,31 @@
 Starting Test Suit: strings_benchmarks
 -------------------------------
 Starting Test: test1_strings.py
-Finished Test: test1_strings.py		Total Time: 61.452576875686646
+Finished Test: test1_strings.py		Total Time: 2876.3386657238007
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test2_strings.py
-Finished Test: test2_strings.py		Total Time: 1.9232096672058105
-*******Test Result: Before Start
+Finished Test: test2_strings.py		Total Time: 2483.2075593471527
+*******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test3_strings.py
+Finished Test: test3_strings.py		Total Time: 139.4086709022522
+*******Test Result: Found inv: i >= 0
+-------------------------------
+-------------------------------
+Starting Test: test4_strings.py
+Finished Test: test4_strings.py		Total Time: 2905.9264533519745
+*******Test Result: Timed Out
+-------------------------------
+-------------------------------
+Starting Test: test5_strings.py
+Finished Test: test5_strings.py		Total Time: 269.98814868927
+*******Test Result: Found inv: i >= 0
+-------------------------------
+-------------------------------
+Starting Test: test6_strings.py
+Finished Test: test6_strings.py		Total Time: 2403.795770406723
+*******Test Result: Timed Out
+-------------------------------

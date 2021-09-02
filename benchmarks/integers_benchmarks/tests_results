@@ -1,41 +1,41 @@
 Starting Test Suit: integers_benchmarks
 -------------------------------
 Starting Test: test0_ints.py
-Finished Test: test0_ints.py		Total Time: 61.347578287124634
+Finished Test: test0_ints.py		Total Time: 2403.797301054001
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test1_ints.py
-Finished Test: test1_ints.py		Total Time: 61.35988092422485
+Finished Test: test1_ints.py		Total Time: 2403.700626373291
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test2_ints.py
-Finished Test: test2_ints.py		Total Time: 61.255682945251465
+Finished Test: test2_ints.py		Total Time: 2400.9583489894867
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test3_ints.py
-Finished Test: test3_ints.py		Total Time: 62.004345655441284
+Finished Test: test3_ints.py		Total Time: 2401.1097614765167
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test4_ints.py
-Finished Test: test4_ints.py		Total Time: 2.563669204711914
-*******Test Result: Before Start
+Finished Test: test4_ints.py		Total Time: 2467.868031024933
+*******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test5_ints.py
-Finished Test: test5_ints.py		Total Time: 61.33169507980347
+Finished Test: test5_ints.py		Total Time: 2401.050106048584
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test7_ints.py
-Finished Test: test7_ints.py		Total Time: 61.264806509017944
-*******Test Result: Timed Out
+Finished Test: test7_ints.py		Total Time: 1014.6793048381805
+*******Test Result: Found inv: revrsed_num >= 0
 -------------------------------
 -------------------------------
 Starting Test: test8_ints.py
-Finished Test: test8_ints.py		Total Time: 61.26734519004822
+Finished Test: test8_ints.py		Total Time: 2403.5555152893066
 *******Test Result: Timed Out
 -------------------------------

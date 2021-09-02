@@ -218,9 +218,9 @@ class VCGenerator(object):
                     item_lhs = eval_lhs[1]
                     item_lhs_untagged = eval_lhs_untagged[1]
                     items_vc.append(eval_lhs[0])
-                    items_vc.append(eval_lhs_untagged[0])
+                    # items_vc.append(eval_lhs_untagged[0])
 
-                assign_vc = OP['=='](item_lhs, OP[expr.root[:-1]](item_lhs_untagged, item_rhs))
+                assign_vc = OP['=='](item_lhs, OP[expr.root[:-1]](item_lhs, item_rhs))
                 if len(items_vc) > 0:
                     assign_vc = And(items_vc + [assign_vc])
                 return assign_vc
@@ -232,7 +232,7 @@ class VCGenerator(object):
                                     tagged_id=False)  # maybe we should leave tagged_id without change (as set by the caller). this should allow a[i] to be on LHS if needed.. im not sure though
                 eval_index = eval_expr(index, tagged_id=False)
                 if type(eval_index) is tuple:
-                    deref = eval_id[eval_index][1]
+                    deref = eval_id[eval_index[1]]
                     if isinstance(deref, BitVecRef):
                         deref = Unit(deref)
                     return eval_index[0], deref
@@ -697,11 +697,12 @@ class VCGenerator(object):
                 if t.subtrees[1].root == 'while':
                     post_loop_vars = []
                     res = construct_tr(t.subtrees[0], collected_vars=collected_vars)
-                    tr_lists[1] = construct_tr(t.subtrees[1], collected_vars=post_loop_vars)
-                    print('77777777777777777777777777')
-                    print(post_loop_vars)
-                    if post_loop_vars:
-                        tr_lists[2] = And(post_loop_vars)
+                    tr_lists[1] = construct_tr(t.subtrees[1], collected_vars=collected_vars)
+                    tr_lists[2] = And([vars_dict[v][0] == vars_dict[v + '_'][0] for v in vars_dict if not v.endswith('_')])
+                    # print('77777777777777777777777777')
+                    # print(post_loop_vars)
+                    # if post_loop_vars:
+                    #     tr_lists[2] = And(post_loop_vars)
                     return res
                 return And(construct_tr(t.subtrees[0], collected_vars=collected_vars), construct_tr(t.subtrees[1], collected_vars=collected_vars))
             elif t.root == 'while':

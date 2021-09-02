@@ -97,7 +97,7 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
         solver.add(Not(And(lst)))
         if solver.check() == unsat:
             sys.stdout = back_up
-            # print("Found inv: {}".format(inv))
+            print("Found inv: {}".format(inv))
             if res_dict:
                 res_dict["result"] = ("Found inv: {}".format(inv))
             # print("res_dict['result']: {}".format(res_dict["result"]))
