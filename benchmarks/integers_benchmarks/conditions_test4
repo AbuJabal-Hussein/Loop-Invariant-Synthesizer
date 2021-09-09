@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : len(myList) * 2 == n
+post_cond : True

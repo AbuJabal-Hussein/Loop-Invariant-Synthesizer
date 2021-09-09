@@ -1,6 +1,6 @@
-E  ->  E1 RELOP E1 | NOT LPAREN E RPAREN | LPAREN E AND E RPAREN| LPAREN E OR E RPAREN
+E  ->  E1 RELOP E1 | NOT LPAREN E RPAREN | LPAREN E RPAREN AND LPAREN E RPAREN| LPAREN E RPAREN OR LPAREN E RPAREN
 E0   ->  ID LSPAREN ID RSPAREN
-E0   ->  LEN LPAREN ID RPAREN | LEN LPAREN | INDEX LPAREN ID COMMA ID RPAREN
+E0   ->  LEN LPAREN ID RPAREN  | INDEX LPAREN ID COMMA ID RPAREN
 E1	 ->  ID PLUSMINUS ID | ID | E0
-VAR -> str1 | strLen | i | isPalindrome | countDigits | digits | myList | newList | num | shiftedList
+VAR -> str1 | strLen | i | isPalindrome | countDigits | digits | myList | newList | num | shiftedList | count
 FUNCS -> len | index

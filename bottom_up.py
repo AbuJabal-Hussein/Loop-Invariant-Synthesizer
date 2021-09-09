@@ -59,10 +59,11 @@ def chunkIt(seq, split):
 
 
 def check_batch_by_z3(generator, batch, limit=-1):
-    strings = []
-    lst = []
+    # strings = []
+    words = []
     # print('..............starting batch_to_z3................')  # Will print in tests too
     s_ = Solver()
+    exceptions = []
     for code in batch:
         if time() > limit > 0:
             # print('..............timing out batch_to_z3................')  # Will print in tests too
@@ -82,7 +83,10 @@ def check_batch_by_z3(generator, batch, limit=-1):
                 s_.reset()
                 continue
             s_.reset()
-
+        except z3types.Z3Exception as e:
+            if "Value cannot be converted into a Z3 Boolean value" in e.args[0]:
+                exceptions.append(code)
+                continue
         except Exception:
             continue
 
@@ -95,11 +99,12 @@ def check_batch_by_z3(generator, batch, limit=-1):
             continue
         # self.z3_to_str[inv] = word
         # lst.append(inv)
-        strings.append(word)
+        # strings.append(word)
+        words.append(code)
         # lst.append(self.vc_gen.generate_vc(ast))
     # print('..............ending batch_to_z3................')  # Will print in tests too
 
-    return strings
+    return exceptions, words
 
 class BottomUp:
 
@@ -116,6 +121,7 @@ class BottomUp:
         self.timeout = timeout
         self.start_time = time() if timeout > 0 else None
         self.strings = []
+        self.exceptions = []
         self.grammar = Grammar.from_string(grammar)
         print("Grammar:\n{}".format(self.grammar))
         self.tokenizer = SillyLexer(tokens)
@@ -226,7 +232,7 @@ class BottomUp:
                 break
             if self.start_time:
                 if time() - (self.start_time + self.timeout) >= 0:
-                    return
+                    break
             tags = current_form.tags.copy()
             # for tag in tags:
             for l in self.grammar.rules.values():
@@ -574,7 +580,6 @@ class BottomUp:
         #     continue
         except Exception:
             return None
-
         if not isinstance(inv, ExprRef):
             return None
         if type(inv) is bool or (type(inv) == BoolRef and (inv == True or inv == False)):
@@ -591,6 +596,7 @@ class BottomUp:
         pool = multiprocessing.Pool(processes=num)
         chunks = chunkIt(batch, num)
         async_results = []
+        passed = []
         for chunk in chunks:
             # proc = multiprocessing.Process(target=remove_equal, args=[x, chunk, lambda d_: batched.append(d_)])
             # proc.start()
@@ -603,10 +609,12 @@ class BottomUp:
         pool.close()
         pool.join()
         for async_res in async_results:
-            results = async_res.get()
-            for res in results:
-                self.strings.append(res)
-        return
+            exceptions, words = async_res.get()
+            passed.extend(words)
+            self.exceptions.extend(exceptions)
+            for res in words:
+                self.strings.append(res.word)
+        return passed
 
     # def inv_tagged(self, inv):
     #     inv_str = self.z3_to_str[inv]
@@ -654,7 +662,7 @@ class BottomUp:
             # print("self.reverse_dict:")
             # print(self.reverse_dict)
             # z3_batch = list(self.vc_gen.generate_vc(self.vc_gen.parser(b.word)) for b in curr_batch)
-            self.batch_to_z3(curr_batch)
+            converted = self.batch_to_z3(curr_batch)
             if self.start_time:
                 if time() - (self.start_time + self.timeout) >= 0:
                     return
@@ -688,14 +696,18 @@ class BottomUp:
             # if len(ehhs.keys()) > 7:
             #     yield curr_batch
             # print("curr_batch after yielding: {}".format(curr_batch))
-            print("self.z3_to_str.values() after yielding: {}".format(self.z3_to_str.values()))
-
-            for word in curr_batch:
+            # print("self.z3_to_str.values() after yielding: {}".format(self.z3_to_str.values()))
+            for word in converted:
                 # if word.word in self.z3_to_str.values() or any(k in word.tags for k in self.grammar.rules.keys()):
                 if any(k in word.tags for k in self.grammar.rules.keys()):
                     self.p.append(word)
+            if len(self.p) == 0:
+                self.p.extend(curr_batch)
             self.p.extend(deepcopy(starting))
+            self.p.extend(self.exceptions)
             print("P after yielding: {}".format(self.p))
+            self.strings.clear()
+            self.exceptions.clear()
         # print("THE EHHS:")
         # print(ehhs)
 

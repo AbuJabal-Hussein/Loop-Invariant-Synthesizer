@@ -1,41 +1,11 @@
 Starting Test Suit: integers_benchmarks
 -------------------------------
-Starting Test: test0_ints.py
-Finished Test: test0_ints.py		Total Time: 11.656825542449951
-*******Test Result: Found inv: i <= x
--------------------------------
--------------------------------
-Starting Test: test1_ints.py
-Finished Test: test1_ints.py		Total Time: 3643.652232646942
-*******Test Result: Timed Out
--------------------------------
--------------------------------
-Starting Test: test2_ints.py
-Finished Test: test2_ints.py		Total Time: 32.79691696166992
-*******Test Result: Found inv: y >= i
--------------------------------
--------------------------------
 Starting Test: test3_ints.py
-Finished Test: test3_ints.py		Total Time: 3601.9172687530518
+Finished Test: test3_ints.py		Total Time: 4201.43861746788
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test4_ints.py
-Finished Test: test4_ints.py		Total Time: 3816.94855594635
-*******Test Result: Timed Out
--------------------------------
--------------------------------
-Starting Test: test5_ints.py
-Finished Test: test5_ints.py		Total Time: 69.33288788795471
-*******Test Result: Found inv: Not(n <= i)
--------------------------------
--------------------------------
-Starting Test: test7_ints.py
-Finished Test: test7_ints.py		Total Time: 805.9554696083069
-*******Test Result: Found inv: revrsed_num >= 0
--------------------------------
--------------------------------
-Starting Test: test8_ints.py
-Finished Test: test8_ints.py		Total Time: 3641.161462545395
+Finished Test: test4_ints.py		Total Time: 4352.775785446167
 *******Test Result: Timed Out
 -------------------------------
