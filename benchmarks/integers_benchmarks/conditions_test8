@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : i == 0
+post_cond : i >= n
