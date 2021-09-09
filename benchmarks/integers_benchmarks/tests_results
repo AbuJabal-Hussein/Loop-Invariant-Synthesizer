@@ -1,41 +1,6 @@
 Starting Test Suit: integers_benchmarks
 -------------------------------
-Starting Test: test0_ints.py
-Finished Test: test0_ints.py		Total Time: 2403.797301054001
-*******Test Result: Timed Out
--------------------------------
--------------------------------
-Starting Test: test1_ints.py
-Finished Test: test1_ints.py		Total Time: 2403.700626373291
-*******Test Result: Timed Out
--------------------------------
--------------------------------
-Starting Test: test2_ints.py
-Finished Test: test2_ints.py		Total Time: 2400.9583489894867
-*******Test Result: Timed Out
--------------------------------
--------------------------------
-Starting Test: test3_ints.py
-Finished Test: test3_ints.py		Total Time: 2401.1097614765167
-*******Test Result: Timed Out
--------------------------------
--------------------------------
-Starting Test: test4_ints.py
-Finished Test: test4_ints.py		Total Time: 2467.868031024933
-*******Test Result: Timed Out
--------------------------------
--------------------------------
-Starting Test: test5_ints.py
-Finished Test: test5_ints.py		Total Time: 2401.050106048584
-*******Test Result: Timed Out
--------------------------------
--------------------------------
-Starting Test: test7_ints.py
-Finished Test: test7_ints.py		Total Time: 1014.6793048381805
-*******Test Result: Found inv: revrsed_num >= 0
--------------------------------
--------------------------------
-Starting Test: test8_ints.py
-Finished Test: test8_ints.py		Total Time: 2403.5555152893066
+Starting Test: test9_ints.py
+Finished Test: test9_ints.py		Total Time: 3601.4735724925995
 *******Test Result: Timed Out
 -------------------------------

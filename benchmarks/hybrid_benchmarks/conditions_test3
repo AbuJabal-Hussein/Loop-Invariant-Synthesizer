@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : all([s == '*' for s in myList[19]])
+post_cond : str1 == myList[19]

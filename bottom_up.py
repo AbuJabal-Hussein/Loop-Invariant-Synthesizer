@@ -77,6 +77,11 @@ def check_batch_by_z3(generator, batch, limit=-1):
             # print("str: {} ast: {} inv: {}".format(word, ast, inv))
             s_.add(inv)
             s_.reset()
+            s_.add(Not(inv))
+            if s_.check() == unsat:
+                s_.reset()
+                continue
+            s_.reset()
 
         except Exception:
             continue
@@ -219,6 +224,9 @@ class BottomUp:
         for current_form in local_p:
             if psutil.virtual_memory().percent > 92:
                 break
+            if self.start_time:
+                if time() - (self.start_time + self.timeout) >= 0:
+                    return
             tags = current_form.tags.copy()
             # for tag in tags:
             for l in self.grammar.rules.values():
@@ -293,7 +301,7 @@ class BottomUp:
 
         # profiler.write("\n\n------------------Starting new Elim-------------------------\n")
         ready = []
-        num = max(multiprocessing.cpu_count() - 1, 8)
+        num = max(multiprocessing.cpu_count() - 1, 7)
         print("num CPUS: %d" % num)
         while len(batch) > 1:
             if time() > timeout > 0:
@@ -578,7 +586,7 @@ class BottomUp:
         return inv
 
     def batch_to_z3(self, batch):
-        num = max(multiprocessing.cpu_count() - 1, 8)
+        num = max(multiprocessing.cpu_count() - 1, 7)
         timeout = self.start_time + self.timeout
         pool = multiprocessing.Pool(processes=num)
         chunks = chunkIt(batch, num)
@@ -636,6 +644,9 @@ class BottomUp:
             # self.z3_to_str = dict()
             print('-----------before grow-------------')
             curr_batch = self.grow()
+            if self.start_time:
+                if time() - (self.start_time + self.timeout) >= 0:
+                    return
             print("-------------------%d-----------------" % i)
             print("Batch size: %d" % len(curr_batch))
             # print("grow:")
@@ -677,7 +688,8 @@ class BottomUp:
             # if len(ehhs.keys()) > 7:
             #     yield curr_batch
             # print("curr_batch after yielding: {}".format(curr_batch))
-            # print("self.z3_to_str.values() after yielding: {}".format(self.z3_to_str.values()))
+            print("self.z3_to_str.values() after yielding: {}".format(self.z3_to_str.values()))
+
             for word in curr_batch:
                 # if word.word in self.z3_to_str.values() or any(k in word.tags for k in self.grammar.rules.keys()):
                 if any(k in word.tags for k in self.grammar.rules.keys()):

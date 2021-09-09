@@ -1,26 +1,26 @@
 Starting Test Suit: hybrid_benchmarks
 -------------------------------
 Starting Test: test2_hybrid.py
-Finished Test: test2_hybrid.py		Total Time: 2401.8063299655914
+Finished Test: test2_hybrid.py		Total Time: 3649.8385276794434
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test3_hybrid.py
-Finished Test: test3_hybrid.py		Total Time: 41.27580213546753
+Finished Test: test3_hybrid.py		Total Time: 48.171900033950806
 *******Test Result: Found inv: Not(str.<(str1, str1))
 -------------------------------
 -------------------------------
 Starting Test: test4_hybrid.py
-Finished Test: test4_hybrid.py		Total Time: 2539.1733179092407
+Finished Test: test4_hybrid.py		Total Time: 3667.295126914978
 *******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test5_hybrid.py
-Finished Test: test5_hybrid.py		Total Time: 2401.48370218277
-*******Test Result: Timed Out
+Finished Test: test5_hybrid.py		Total Time: 30.705686807632446
+*******Test Result: Found inv: Not(Length(str1) <= i)
 -------------------------------
 -------------------------------
 Starting Test: test6_hybrid.py
-Finished Test: test6_hybrid.py		Total Time: 0.8019318580627441
-*******Test Result: Before Start
+Finished Test: test6_hybrid.py		Total Time: 3603.142456293106
+*******Test Result: Timed Out
 -------------------------------

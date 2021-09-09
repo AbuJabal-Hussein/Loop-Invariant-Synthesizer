@@ -75,6 +75,8 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
         tagged_post_cond = bt.tag_and_convert(post_cond)
     else:
         tagged_post_cond = post_cond
+    print('pre_cond: {}'.format(pre_cond))
+    print('post condition: {}'.format(tagged_post_cond))
     # print("Vars:")
     # print(bt.p)
     # print("Tokens:")

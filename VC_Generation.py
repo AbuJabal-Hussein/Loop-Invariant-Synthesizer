@@ -134,20 +134,20 @@ class VCGenerator(object):
                 expr2 = expr.subtrees[1]
                 expr1_eval = eval_expr(expr1, tagged_id=False)
                 expr2_eval = eval_expr(expr2, tagged_id=False)
-                items_vc = None
+                items_vc = []
                 item1 = expr1_eval
                 item2 = expr2_eval
                 if type(expr1_eval) is tuple:
                     item1 = expr1_eval[1]
-                    items_vc = expr1_eval[0]
+                    items_vc.append(expr1_eval[0])
                 if type(expr2_eval) is tuple:
                     item2 = expr2_eval[1]
-                    items_vc = And(items_vc, expr2_eval[0])
+                    items_vc.append(expr2_eval[0])
 
-                if items_vc is not None:
+                if items_vc:
                     if expr.root in ['!=', '>', '<', '<=', '>=', '==', 'AND', 'OR']:
-                        return And(items_vc, OP[expr.root](item1, item2))
-                    return items_vc, OP[expr.root](item1, item2)
+                        return And(items_vc + [OP[expr.root](item1, item2)])
+                    return And(items_vc), OP[expr.root](item1, item2)
                 return OP[expr.root](item1, item2)
 
             elif expr.root == 'NOT':
@@ -396,7 +396,7 @@ class VCGenerator(object):
                         if expr.subtrees[0].root in list_types:
                             max_vc = And(eval_items[0][0], max_vc)
                         return max_vc, max_item
-                    return eval_items[0]
+                    raise ValueError('Type Error: first argument of the function \'max\' must be of type integers list')
 
                 if expr_is_int(expr.subtrees[0], eval_items[0]) and expr_is_int(expr.subtrees[1], eval_items[1]):
                     item1 = eval_items[0]
