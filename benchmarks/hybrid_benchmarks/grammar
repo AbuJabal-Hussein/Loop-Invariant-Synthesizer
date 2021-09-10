@@ -5,5 +5,5 @@ E0   ->  LEN LPAREN ID RPAREN | APPEND LPAREN ID COMMA E0 RPAREN | REVERSE LPARE
 E0   ->  MAX LPAREN ID RPAREN | MAX LPAREN LSPAREN LIST_ITEMS RSPAREN RPAREN | INDEX LPAREN ID COMMA E0 RPAREN | SUBSTRING LPAREN ID COMMA E0 COMMA E0 RPAREN
 E0   ->  ID
 LIST_ITEMS -> E0 | E0 COMMA LIST_ITEMS
-VAR  ->  str1 | strLen | i | isPalindrome | countDigits | digits | myList | newList | num | shiftedList
+VAR  ->  str1 | str2 | sortedList | count | loopnum | i | j | myList | x | low | high | high | res | n | num | dem | s | t | listOrder
 FUNCS -> len | append | reverse | max | index | substring

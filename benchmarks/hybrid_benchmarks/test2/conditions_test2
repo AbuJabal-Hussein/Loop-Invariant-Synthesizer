@@ -1,2 +1,2 @@
-pre_cond : (len(myList) == 20) and (all([(myList[k] <= myList[k + 1]) for k in range(19)]))
+pre_cond : True
 post_cond : (res != -1) and (myList[res] == x)
