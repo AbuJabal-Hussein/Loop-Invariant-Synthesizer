@@ -1,0 +1,16 @@
+Starting Test Suit: test1
+-------------------------------
+Starting Test: test1_strings.py
+Finished Test: test1_strings.py		Total Time: 2.4135756492614746
+*******Test Result: Before Start
+-------------------------------
+-------------------------------
+Starting Test: test1_strings2.py
+Finished Test: test1_strings2.py		Total Time: 2.5739591121673584
+*******Test Result: Before Start
+-------------------------------
+-------------------------------
+Starting Test: test1_strings_not_poli.py
+Finished Test: test1_strings_not_poli.py		Total Time: 2.460303783416748
+*******Test Result: Before Start
+-------------------------------

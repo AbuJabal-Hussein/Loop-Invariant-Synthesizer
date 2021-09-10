@@ -1,7 +1,7 @@
 E  ->  E0 RELOP E0 | NOT LPAREN E RPAREN | LPAREN E RPAREN AND LPAREN E RPAREN| LPAREN E RPAREN OR LPAREN E RPAREN
 E0   ->  LPAREN E0 MULTDIV E0 RPAREN | LPAREN E0 PLUSMINUS E0 RPAREN
 E0   ->  myList LSPAREN E0 RSPAREN
-E0   ->  LEN LPAREN E0 RPAREN
+E0   ->  LEN LPAREN ID RPAREN
 E0   ->  ID   |   NUM
 VAR -> x | y | i | n | myList | count | num | limiter | rowsNum | colsNum | revrsed_num
 FUNCS -> len

@@ -1,0 +1,2 @@
+pre_cond : True
+post_cond : count == 0
