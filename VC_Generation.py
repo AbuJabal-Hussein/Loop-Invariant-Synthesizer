@@ -489,6 +489,7 @@ class VCGenerator(object):
                     if is_array(eval_item) or expr.subtrees[0].root in list_types:
                         arr = eval_item[1]
                         arr_len = eval_item[3]
+                        arr_vc = eval_item[0]
                     elif expr.subtrees[0].root == 'ID':
                         var_name = expr.subtrees[0].subtrees[0].root
                         arr = vars_dict[var_name][0]
@@ -497,7 +498,10 @@ class VCGenerator(object):
                         raise ValueError(
                             'Type Error: first argument of the function \'all\' must be of type bool list')
 
-                    return And([arr[i] for i in range(0, arr_len)])
+                    res = And([arr[i] for i in range(0, arr_len)])
+                    if arr_vc is not None:
+                        res = And(arr_vc, res)
+                    return res
                 else:
                     raise ValueError('Syntax Error: wrong number of arguments in function \'all\'')
 
@@ -507,6 +511,7 @@ class VCGenerator(object):
                     if is_array(eval_item) or expr.subtrees[0].root in list_types:
                         arr = eval_item[1]
                         arr_len = eval_item[3]
+                        arr_vc = eval_item[0]
                     elif expr.subtrees[0].root == 'ID':
                         var_name = expr.subtrees[0].subtrees[0].root
                         arr = vars_dict[var_name][0]
@@ -514,7 +519,10 @@ class VCGenerator(object):
                     else:
                         raise ValueError(
                             'Type Error: first argument of the function \'all\' must be of type bool list')
-                    return Or([arr[i] for i in range(0, arr_len)])
+                    res = Or([arr[i] for i in range(0, arr_len)])
+                    if arr_vc is not None:
+                        res = And(arr_vc, res)
+                    return res
                 else:
                     raise ValueError('Syntax Error: wrong number of arguments in function \'any\'')
 

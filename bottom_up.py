@@ -8,8 +8,11 @@ from VC_Generation import *
 import multiprocessing
 from time import time
 from z3.z3types import Z3Exception
-from z3 import ExprRef
+from z3 import ExprRef, set_param
 import psutil
+
+# set z3 global timeout value
+set_param("timeout", 30)
 
 def type_it(type_):
     return type_
@@ -67,11 +70,11 @@ def check_batch_by_z3(generator, batch, limit=-1):
     for code in batch:
         if time() > limit > 0:
             # print('..............timing out batch_to_z3................')  # Will print in tests too
-            return []
+            return [], []
         word = code.word
         inv = None
         ast = generator.parser(word)
-        if ast is None or ast.depth < 2:
+        if ast is None:
             continue
         try:
             inv = generator.generate_vc(ast)[0]
@@ -84,9 +87,13 @@ def check_batch_by_z3(generator, batch, limit=-1):
                 continue
             s_.reset()
         except z3types.Z3Exception as e:
-            if "Value cannot be converted into a Z3 Boolean value" in e.args[0]:
-                exceptions.append(code)
+            try:
+                if "Value cannot be converted into a Z3 Boolean value" in e.args[0]:
+                    exceptions.append(code)
+                    continue
+            except Exception:
                 continue
+            continue
         except Exception:
             continue
 
@@ -556,7 +563,7 @@ class BottomUp:
         s_ = Solver()
         inv = None
         ast = self.vc_gen.parser(word)
-        if ast is None or ast.depth < 2:
+        if ast is None:
             return None
         try:
             inv = self.vc_gen.generate_vc(ast)[0]
@@ -699,13 +706,18 @@ class BottomUp:
             # print("self.z3_to_str.values() after yielding: {}".format(self.z3_to_str.values()))
             for word in converted:
                 # if word.word in self.z3_to_str.values() or any(k in word.tags for k in self.grammar.rules.keys()):
-                if any(k in word.tags for k in self.grammar.rules.keys()):
+                if any(k in word.tags for k in self.grammar.rules.keys()) and word.word in self.z3_to_str.values():
                     self.p.append(word)
-            if len(self.p) == 0:
-                self.p.extend(curr_batch)
+            # if len(self.p) == 0:
+            #     self.p.extend(curr_batch)
             self.p.extend(deepcopy(starting))
             self.p.extend(self.exceptions)
-            print("P after yielding: {}".format(self.p))
+            print('exceptions: ')
+            print(self.exceptions)
+            print('converted: ')
+            print(converted)
+            print("P after yielding: ")
+            print(self.p)
             self.strings.clear()
             self.exceptions.clear()
         # print("THE EHHS:")
