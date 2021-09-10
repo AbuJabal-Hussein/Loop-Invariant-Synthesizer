@@ -1,0 +1,16 @@
+Starting Test Suit: test2_ints
+-------------------------------
+Starting Test: test2_ints.py
+Finished Test: test2_ints.py		Total Time: 301.04268050193787
+*******Test Result: Timed Out
+-------------------------------
+-------------------------------
+Starting Test: test2_ints2.py
+Finished Test: test2_ints2.py		Total Time: 300.9867055416107
+*******Test Result: Timed Out
+-------------------------------
+-------------------------------
+Starting Test: test2_ints3.py
+Finished Test: test2_ints3.py		Total Time: 30.822014331817627
+*******Test Result: Found inv: y >= i
+-------------------------------

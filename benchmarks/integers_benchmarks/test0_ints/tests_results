@@ -1,0 +1,16 @@
+Starting Test Suit: test0_ints
+-------------------------------
+Starting Test: test0_ints.py
+Finished Test: test0_ints.py		Total Time: 127.35910034179688
+*******Test Result: Found inv: i <= x
+-------------------------------
+-------------------------------
+Starting Test: test0_ints2.py
+Finished Test: test0_ints2.py		Total Time: 12.666782855987549
+*******Test Result: Found inv: i <= x
+-------------------------------
+-------------------------------
+Starting Test: test0_ints3.py
+Finished Test: test0_ints3.py		Total Time: 11.858389139175415
+*******Test Result: Found inv: i <= x
+-------------------------------

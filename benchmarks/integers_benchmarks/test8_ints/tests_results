@@ -1,0 +1,16 @@
+Starting Test Suit: test8_ints
+-------------------------------
+Starting Test: test8_ints.py
+Finished Test: test8_ints.py		Total Time: 11.878300189971924
+*******Test Result: Found inv: n <= i
+-------------------------------
+-------------------------------
+Starting Test: test8_ints2.py
+Finished Test: test8_ints2.py		Total Time: 11.932778120040894
+*******Test Result: Found inv: n <= i
+-------------------------------
+-------------------------------
+Starting Test: test8_ints3.py
+Finished Test: test8_ints3.py		Total Time: 12.29155945777893
+*******Test Result: Found inv: n <= i
+-------------------------------

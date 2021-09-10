@@ -1,0 +1,16 @@
+Starting Test Suit: test9_ints
+-------------------------------
+Starting Test: test9_ints.py
+Finished Test: test9_ints.py		Total Time: 300.9972999095917
+*******Test Result: Timed Out
+-------------------------------
+-------------------------------
+Starting Test: test9_ints2.py
+Finished Test: test9_ints2.py		Total Time: 301.32594656944275
+*******Test Result: Timed Out
+-------------------------------
+-------------------------------
+Starting Test: test9_ints3.py
+Finished Test: test9_ints3.py		Total Time: 31.98775315284729
+*******Test Result: Found inv: i <= x
+-------------------------------
