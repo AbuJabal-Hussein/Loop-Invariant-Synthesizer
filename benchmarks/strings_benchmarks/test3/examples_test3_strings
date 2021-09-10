@@ -1,0 +1,5 @@
+myList list ['abc7d', '7efg', 'hijk7', 'lmnop77', 'qr7stuv', 'w7xyz']newList list ['w7xyz', 'qr7stuv', 'lmnop77', 'hijk7', '7efg', 'abc7d']num int 38i int 3False
+myList list ['abc7d', '7efg', 'hijk7', 'lmnop77', 'qr7stuv', 'w7xyz']newList list ['abc7d', '7efg', 'hijk7', 'lmnop77', 'qr7stuv', 'w7xyz']num int 38i int 4False
+myList list ['abc7d', '7efg', 'hijk7', 'lmnop77', 'qr7stuv', 'w7xyz']newList list ['abc7d', '7efg', 'hijk7', 'lmnop77', 'qr7stuv', 'w7xyz']num int 38i int 45False
+myList list ['abc7d', '7efg', 'hijk7', 'lmnop77', 'qr7stuv', 'w7xyz']newList list ['w7xyz', 'qr7stuv', 'lmnop77', 'hijk7', '7efg', 'abc7d']num int 38i int 4False
+myList list ['abc7d', '7efg', 'hijk7', 'lmnop77', 'qr7stuv', 'w7xyz']newList list ['w7xyz', 'qr7stuv', 'lmnop77', 'hijk7', '7efg', 'abc7d']num int 38i int 45True

@@ -8,4 +8,3 @@ while i < strLen:
 	__inv__(str1=str1, myList=myList, i=i, strLen=strLen)
 	myList = append(myList, charAt(str1, i))
 	i += 1
-myList = append(myList, substring(str1, 5, 12))
