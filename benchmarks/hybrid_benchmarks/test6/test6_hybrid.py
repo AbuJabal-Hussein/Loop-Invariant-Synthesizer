@@ -1,15 +1,13 @@
-from utilities.inv import __inv__, index
+from utilities.inv import __inv__
 
-# sort a list of strings according to a list of integers
-# assume that the list of integers have unique values, meaning, no 2 elements have the same value
-
-myList = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
-listOrder = [4, 6, 5, 2, 9, 0, 3, 7, 1, 8]
-sortedList = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
+myList = ["abc", "bcd", "cde", "def", "efg", "fgh", "ghi", "hij", "ijk", "jkl"]
+str1 = "ghi"
 i = 0
-num = 0
+j = -1
 while i < len(myList):
-	__inv__(myList=myList, listOrder=listOrder, sortedList=sortedList, i=i, num=num)
-	num = index(listOrder, i)
-	sortedList[i] = myList[num]
-	i += 1
+	__inv__(myList=myList, str1=str1, i=i, j=j)
+	if myList[i] == str1:
+		j = i
+		i = len(myList)
+	else:
+		i += 1

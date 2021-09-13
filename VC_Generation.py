@@ -695,8 +695,12 @@ class VCGenerator(object):
                 # process the while body
                 tr_lists[1] = construct_tr(t.subtrees[0], collected_vars=collected_vars)
                 # process the statements after the while, if exists
+                after = []
                 if len(t.subtrees) == 2:
-                    tr_lists[2] = construct_tr(t.subtrees[1], collected_vars=collected_vars)
+                    after.append(construct_tr(t.subtrees[1], collected_vars=collected_vars))
+                progvars = [vars_dict[v][0] == vars_dict[v + '_'][0] for v in vars_dict if not v.endswith('_')]
+                after.extend(progvars)
+                tr_lists[2] = And(after)
                 return True
             elif t.root == 'S':
                 if len(t.subtrees) == 1:

@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : sortedList == [3, 6, 7, 11, 20, 29, 33, 36, 39, 46]
+post_cond : all([sortedList[k] <= sortedList[k + 1] for k in range(9)])

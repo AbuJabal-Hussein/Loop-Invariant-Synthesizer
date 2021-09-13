@@ -1,16 +1,16 @@
 Starting Test Suit: test6
 -------------------------------
 Starting Test: test6_strings.py
-Finished Test: test6_strings.py		Total Time: 2.659450054168701
-*******Test Result: Before Start
+Finished Test: test6_strings.py		Total Time: 13.740862607955933
+*******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test6_strings_fail.py
-Finished Test: test6_strings_fail.py		Total Time: 2.565500497817993
-*******Test Result: Before Start
+Finished Test: test6_strings_fail.py		Total Time: 13.76632308959961
+*******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test6_strings_holds_b.py
-Finished Test: test6_strings_holds_b.py		Total Time: 2.5604825019836426
-*******Test Result: Before Start
+Finished Test: test6_strings_holds_b.py		Total Time: 13.64063286781311
+*******Test Result: Timed Out
 -------------------------------

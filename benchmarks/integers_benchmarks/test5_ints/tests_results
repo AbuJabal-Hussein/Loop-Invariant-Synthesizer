@@ -1,16 +1,16 @@
 Starting Test Suit: test5_ints
 -------------------------------
 Starting Test: test5_ints.py
-Finished Test: test5_ints.py		Total Time: 68.84836053848267
-*******Test Result: Found inv: Not(n <= i)
+Finished Test: test5_ints.py		Total Time: 13.578120231628418
+*******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test5_ints2.py
-Finished Test: test5_ints2.py		Total Time: 69.22038006782532
-*******Test Result: Found inv: Not(n <= i)
+Finished Test: test5_ints2.py		Total Time: 13.578794002532959
+*******Test Result: Timed Out
 -------------------------------
 -------------------------------
 Starting Test: test5_ints3.py
-Finished Test: test5_ints3.py		Total Time: 301.38609647750854
+Finished Test: test5_ints3.py		Total Time: 13.719773292541504
 *******Test Result: Timed Out
 -------------------------------

@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : sortedList == ['f', 'i', 'd', 'g', 'a', 'c', 'b', 'h', 'j', 'e']
+post_cond : True
