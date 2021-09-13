@@ -1,7 +1,7 @@
 from utilities.inv import __inv__, charAt, index
 # count the number of digits in a string
 # we want to check the property: does the string contain only digits (countDigits == len(str1))
-# for this example, the condition does not hold, therefore, the synthesizer shouldn't find a proper invariant
+
 str1 = '15689425'
 countDigits = 0
 strLen = len(str1)
@@ -12,7 +12,6 @@ while i < strLen:
 	if index(digits, charAt(str1, i)) != -1:
 		countDigits += 1
 	i += 1
-# possible to remove below
 if strLen < len(digits):
 	i = len(digits)
 else:

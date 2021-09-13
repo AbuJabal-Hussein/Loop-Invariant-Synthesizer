@@ -42,9 +42,21 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
         sys.stdout = open(os.devnull, 'w')
     prog_states_file = "programStates.txt"
     input_code = read_source_file(program_file)
-    LoopInvSynth()(prog_states_file, input_code)
-    print("code: {}".format(input_code))
-    pre_loop, loop_cond, loop_body, post_loop = VCGenerator()(input_code)
+    try:
+        LoopInvSynth()(prog_states_file, input_code)
+        print("code: {}".format(input_code))
+        pre_loop, loop_cond, loop_body, post_loop = VCGenerator()(input_code)
+    except ValueError as err:
+        print(err.args[0])
+        if res_dict:
+            res_dict["result"] = err.args[0]
+        return False
+    except Exception:
+        print('invalid input program!')
+        if res_dict:
+            res_dict["result"] = 'Invalid input program!'
+        return False
+
     GRAMMAR = get_grammar(grammar_file)
     TOKENS = r" (if|else|elif|while|for|in)(?![\w\d_]) (?P<COMMA>\,) (?P<DOT>\.) (?P<LPAREN>\() (?P<NUM>[+\-]?\d+)" \
              r" (?P<ASSOPPOWER>(\*\*=)) (?P<ASSOP>[+\-*/]=) (?P<POWER>(\*\*)) (?P<MULTDIV>[*/%]) (?P<PLUSMINUS>[+\-])  :" \

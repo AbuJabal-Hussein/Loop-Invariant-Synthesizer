@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : str1 == myList[19]
+post_cond : True

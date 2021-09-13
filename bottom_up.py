@@ -739,7 +739,7 @@ if __name__ == '__main__':
     E0  ->   ( E )
     VAR -> x | y | z | i | w | n | myList
     """
-    bt = BottomUp(grammar=GRAMMAR, prog_states_file="programStates.txt", tokens=TOKENS, prog_file="TestInv.py")
+    bt = BottomUp(grammar=GRAMMAR, prog_states_file="programStates.txt", tokens=TOKENS, prog_file="unit_tests/TestInv.py")
     print("Vars:")
     print(bt.p)
     print("Tokens:")
