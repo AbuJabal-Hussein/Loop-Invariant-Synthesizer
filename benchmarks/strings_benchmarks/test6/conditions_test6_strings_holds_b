@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : count <= 4
+post_cond : count <= i

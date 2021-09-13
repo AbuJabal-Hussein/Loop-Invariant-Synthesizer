@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : y <= (x * 2)
+post_cond : True
