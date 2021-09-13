@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : all([index(shiftedList, item) != -1 for item in myList])
+post_cond : len(shiftedList) <= len(myList)

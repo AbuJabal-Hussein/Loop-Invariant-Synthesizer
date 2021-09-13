@@ -75,52 +75,52 @@ After all that, the remaining unique candidates are tested against the states, p
 Otherwise, we check the next candidate and so on until all of them failed the wrapper's checks, so we go to the next iteration, and so on.
 
 ## VC_Generation Class
-The main purpose of this class is to generate Z3 verification conditions (VC) given a python program or statement. The python program/statement must be derivable from the standard python grammar, and also derivable from our custom sub-grammar, which is found in the file syntax.py in the PythonParser class. We will describe this sub-grammar in words in the upcoming section.
+The main purpose of this class is to generate Z3 verification conditions (VC) given a python program or statement. The python program/statement must be derivable from the standard python grammar, and also derivable from our custom sub-grammar, which is found in the file `syntax.py` in the `PythonParser` class. We will describe this sub-grammar in words in the following section.
 ####How does it work?
-The VC_Generator uses a parser to decompose the python input code into statements and expressions, and then, it recursively converts these statements into Z3 verification conditions.
-The generator returns a 4-element-tuple which contains, in this order: 
-1- VC of the code before the ‘while’ loop
-2- VC of the loop condition
-3- VC of the loop body
-4- VC of the code after the loop
+The VC_Generator uses a parser to decompose the python input code into statements and expressions, and then, it recursively converts these statements into Z3 verification conditions.  
+The generator returns a 4-element-tuple which contains, in this order:  
+1. VC of the code before the ‘while’ loop
+2. VC of the loop condition
+3. VC of the loop body
+4. VC of the code after the loop
 
 # Description of the used python grammar:
-The grammar follows the following constraints:
-•	Supported types: int, str, bool, list
-•	Literal expressions for each type:
-o	Int: numbers or signed numbers
-o	Bool: True/False
-o	Str: ‘some text’ or “some text”
-o	List: [element1, element2, ...]
-•	Variable assignments: (=, +=, -=, *=, /=, **=)
-•	Relation operations: (<, >, <=, >=, ==, !=), (and, or, not) . It is recommended to wrap the operators’ sides with parenthesis, since the grammar does not fully support operators’ priorities.
-•	Basic integer arithmetic operations, i.e. (+, -, *, /, %, **)
-•	String concatenation operation using the ‘+’ operator.
-•	String indexing using brackets: str1[i]
-•	List element accessing using brackets: lst[i]
-•	Lists must be homogeneous, i.e., all its elements must be of the same type.
-•	List comprehension: [exp1 for id1 in exp2] s.t. exp1 is an expression, exp2 is a list, id1 is a temporary variable of the same type of the exp2 elements.
-•	The grammar accepts indentation up to 5 indents.
-•	Indents must be ‘real’ tabs and cannot be spaces.
-•	Conditions and loops: (while, if, elif, else)
-•	Variable names must not contain the name of any reserved name, including reserved keywords and function names. For instance, ‘maxNum’ is not a valid variable name for it contains the function name ‘max’
-•	The following are the supported functions:
-o	len(arg1): arg1 is a list or a string. Returns the number of elements of arg1.
-o	reverse(arg1): arg1 is a list. Returns a copy of arg1 in reversed order.
-o	append(arg1, arg2): arg1 is a list, arg2 is an element of the same type as arg1 elements. Returns a new list that consists of arg1 elements and the arg2 appended to the end.
-o	max(arg1, arg2): arg1 is a number, arg2 is a number. Returns the maximum between them.
-o	max(arg1): arg1 is a list of numbers. Returns the maximal number in arg1.
-o	min(arg1, arg2): arg1 is a number, arg2 is a number. Returns the minimum between them.
-o	min(arg1): arg1 is a list of numbers. Returns the minimal number in arg1.
-o	sum(arg1): arg1 is a list of numbers. Returns the sum of arg1 elements.
-o	sum(arg_1, arg_2, …, arg_k): arg_i for each i in [1,k] is a number. Returns the sum of all the arguments.
-o	index(arg1, arg2): arg1 is a list or a string, arg2 is an element. Returns the index of the first appearance of arg2 in arg1 if arg2 is found in arg1, otherwise returns -1.
-o	charAt(arg1, arg2): arg1 is a string, arg2 is an index (a positive number). Returns arg1[arg2].
-o	substring(arg1, arg2, arg3): arg1 is a string, arg2 is a number, arg3 is a number. Returns arg1[arg2 : arg3].
-o	range(arg1): arg1 is a number (note: arg1 cannot be a variable). Returns a list [0, 1, 2, …, arg1 - 1].
-o	range(arg1, arg2): arg1 is a number, arg2 is a number (note: arg1 and arg2 cannot be a variable). Returns a list [arg1, arg1 + 1, arg1 + 2, …, arg2 - 1].
-o	all(arg1): arg1 is a list of Booleans. Returns true if all the elements of arg1 evaluates to true, otherwise returns false.
-o	any(arg1): arg1 is a list of Booleans. Returns true if there exists an element in arg1 evaluates to true, otherwise returns false.
+The grammar follows the following constraints:  
+-	Supported types: int, str, bool, list  
+-	Literal expressions for each type:  
+    o&nbsp;&nbsp;int: numbers or signed numbers  
+    o&nbsp;&nbsp;bool: *True*/*False*  
+    o&nbsp;&nbsp;str: *'some text'* or *"some text"*  
+    o&nbsp;&nbsp;list: *[element1, element2, ...]*  
+-	Variable assignments: (=, +=, -=, \*=, /=, \*\*=)  
+-	Relation operations: (<, >, <=, >=, ==, !=), (and, or, not) . It is recommended to wrap the operators’ sides with parenthesis, since the grammar does not fully support operators’ priorities.  
+-	Basic integer arithmetic operations, i.e. (+, -, \*, /, %, \*\*)  
+-	String concatenation operation using the ‘+’ operator.  
+-	String indexing using brackets: *str1[i]*  
+-	List element accessing using brackets: *lst[i]*  
+-	Lists must be homogeneous, i.e., all its elements must be of the same type.  
+-	List comprehension: *[exp1 for id1 in exp2]* s.t. exp1 is an expression, exp2 is a list, id1 is a temporary variable of the same type of the exp2 elements.  
+-	The grammar accepts indentation up to 5 indents.  
+-	Indents must be 'real' tabs and cannot be spaces.  
+-	Conditions and loops: (while, if, elif, else)  
+-	Variable names must not contain the name of any reserved name, including reserved keywords and function names. For instance, *'maxNum'* is not a valid variable name for it contains the function name *'max'*.  
+-	The following are the supported functions:  
+    o&nbsp;&nbsp;`len(arg1)`: arg1 is a list or a string. Returns the number of elements of arg1.  
+    o&nbsp;&nbsp;`reverse(arg1)`: arg1 is a list. Returns a copy of arg1 in reversed order.  
+    o&nbsp;&nbsp;`append(arg1, arg2)`: arg1 is a list, arg2 is an element of the same type as arg1 elements. Returns a new list that consists of arg1 elements and the arg2 appended to the end.  
+    o&nbsp;&nbsp;`max(arg1, arg2)`: arg1 is a number, arg2 is a number. Returns the maximum between them.  
+    o&nbsp;&nbsp;`max(arg1)`: arg1 is a list of numbers. Returns the maximal number in arg1.  
+    o&nbsp;&nbsp;`min(arg1, arg2)`: arg1 is a number, arg2 is a number. Returns the minimum between them.  
+    o&nbsp;&nbsp;`min(arg1)`: arg1 is a list of numbers. Returns the minimal number in arg1.  
+    o&nbsp;&nbsp;`sum(arg1)`: arg1 is a list of numbers. Returns the sum of arg1 elements.  
+    o&nbsp;&nbsp;`sum(arg_1, arg_2, …, arg_k)`: arg_i for each i in [1,k] is a number. Returns the sum of all the arguments.  
+    o&nbsp;&nbsp;`index(arg1, arg2)`: arg1 is a list or a string, arg2 is an element. Returns the index of the first appearance of arg2 in arg1 if arg2 is found in arg1, otherwise returns -1.  
+    o&nbsp;&nbsp;`charAt(arg1, arg2)`: arg1 is a string, arg2 is an index (a positive number). Returns *arg1[arg2]*.  
+    o&nbsp;&nbsp;`substring(arg1, arg2, arg3)`: arg1 is a string, arg2 is a number, arg3 is a number. Returns *arg1[arg2 : arg3]*.  
+    o&nbsp;&nbsp;`range(arg1)`: arg1 is a number (note: arg1 cannot be a variable). Returns a list *[0, 1, 2, …, arg1 - 1]*.  
+    o&nbsp;&nbsp;`range(arg1, arg2)`: arg1 is a number, arg2 is a number (note: arg1 and arg2 cannot be a variable). Returns a list *[arg1, arg1 + 1, arg1 + 2, …, arg2 - 1]*.  
+    o&nbsp;&nbsp;`all(arg1)`: arg1 is a list of Booleans. Returns *True* if all the elements of arg1 evaluates to True, otherwise returns *False*.  
+    o&nbsp;&nbsp;`any(arg1)`: arg1 is a list of Booleans. Returns *True* if there exists an element in arg1 evaluates to True, otherwise returns *False*.  
 
 
 
