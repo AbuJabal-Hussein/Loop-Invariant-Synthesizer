@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : x <= (((i + 1) * i) / 2)
+post_cond : i <= x

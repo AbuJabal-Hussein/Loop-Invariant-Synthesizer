@@ -12,6 +12,7 @@ while i < strLen:
 	if index(digits, charAt(str1, i)) != -1:
 		countDigits += 1
 	i += 1
+# possible to remove below
 if strLen < len(digits):
 	i = len(digits)
 else:

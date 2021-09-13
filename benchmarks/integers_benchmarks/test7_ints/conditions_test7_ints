@@ -1,2 +1,2 @@
 pre_cond : True
-post_cond : revrsed_num <= 987654321
+post_cond : (revrsed_num >= 0) and (num >= 0)
