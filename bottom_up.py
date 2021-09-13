@@ -693,7 +693,7 @@ class BottomUp:
                     inv_tagged = self.tag_and_convert(inv)
                     # inv_tagged = self.batch_to_z3([self.inv_tagged(inv)])[0]
                     print("Inv {} and Tagged {}".format(inv, inv_tagged))
-                    yield (simplify(inv), simplify(inv_tagged))
+                    yield (simplify(inv), simplify(inv_tagged), self.z3_to_str[inv])
             for tagged in self.tagged_vars:
                 del self.vars_dict[tagged]
             self.tagged_vars.clear()

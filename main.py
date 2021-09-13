@@ -104,18 +104,18 @@ def run(program_file, grammar_file, conds_file, omit_print=False, res_dict=None,
         #         res_dict["result"] = b
         #     print("res_dict['result']: {}".format(res_dict["result"]))
         #     return False
-        inv, inv_tagged = b
+        inv, inv_tagged, inv_str = b
         lst = [Implies(And(pre_cond, pre_loop), inv_tagged),
                Implies(And(inv, loop_cond, loop_body), inv_tagged),
                Implies(And(inv, Not(loop_cond), post_loop), tagged_post_cond)]
         solver.add(Not(And(lst)))
         if solver.check() == unsat:
             sys.stdout = back_up
-            print("Found inv: {}".format(inv))
+            print("Found inv: {}".format(inv_str))
             if res_dict:
-                res_dict["result"] = ("Found inv: {}".format(inv))
+                res_dict["result"] = ("Found inv: {}".format(inv_str))
             # print("res_dict['result']: {}".format(res_dict["result"]))
-            return inv
+            return inv_str
         solver.reset()
     sys.stdout = back_up
     if res_dict:
