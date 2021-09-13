@@ -63,15 +63,14 @@ def run_tests(directory='benchmarks\\',
         if grammar_file not in [f.name for f in os.scandir(subdir) if f.is_file()]:
             print("'grammar' file was not found under {}".format(subdir))
         for benchmark in benchmarks:
-            benchmark_stripped = benchmark.split('\\')[-1]
             benchmark_wsep = benchmark + "\\"
             redirection_file = benchmark_wsep + 'tests_results'
             print("redirection file: %s"%redirection_file)
             with open(redirection_file, 'w') as f:
                 with redirect_stdout(f):
-                    print("Starting Test Suit: %s" % benchmark_stripped)
-                    results_dictionary[benchmark_stripped] = {}
-                    times_dictionary[benchmark_stripped] = {}
+                    print("Starting Test Suit: %s" % benchmark)
+                    results_dictionary[benchmark] = {}
+                    times_dictionary[benchmark] = {}
                     files: str = [f.name for f in os.scandir(benchmark) if f.is_file()]
                     test_files = [f for f in files if f.startswith("test") and f != "tests_results"]
 
@@ -81,11 +80,11 @@ def run_tests(directory='benchmarks\\',
                         test_name = test_file.split(".")[0]
                         cond_file = "conditions_" + test_name
                         if cond_file not in files:
-                            print("'{}' file was not found under {}".format(cond_file, benchmark_stripped))
+                            print("'{}' file was not found under {}".format(cond_file, benchmark))
                             print("*******Test Result: {}".format("Files Missing"))
                             print("-------------------------------")
-                            results_dictionary[benchmark_stripped][test_file] = "Files Missing"
-                            times_dictionary[benchmark_stripped][test_file] = -1.0
+                            results_dictionary[benchmark][test_file] = "Files Missing"
+                            times_dictionary[benchmark][test_file] = -1.0
                             continue
                         examples_file_name = "examples_" + test_name
                         examples_file = benchmark_wsep + examples_file_name if examples_file_name in files else ''
@@ -104,18 +103,28 @@ def run_tests(directory='benchmarks\\',
                         proc.start()
                         # proc.join(LOCAL_TIMEOUT * 1.1)
                         # we should just wait for proc to terminate.. no need for timeout here
-                        proc.join()
+                        try:
+                            proc.join(LOCAL_TIMEOUT * 1.5)
+                        except Exception:
+                            results_dictionary[benchmark][test_file] = "Terminated processes"
+                            times_dictionary[benchmark][test_file] = timer(test_start_time, time())
 
+                            print("Finished Test: {}\t\tTotal Time: {}".format(test_file,
+                                                                               test_end_time - test_start_time))
+                            print("*******Test Result: {}".format(res))
+                            print("-------------------------------")
+                            continue
+                        # proc.join()
                         test_end_time = time()
                         res = res_dict["result"]
                         if res == "No Inv found or timed out" or (test_end_time - test_start_time) > LOCAL_TIMEOUT:
                             res = "Timed Out"
-                        results_dictionary[benchmark_stripped][test_file] = res
-                        times_dictionary[benchmark_stripped][test_file] = timer(test_start_time, test_end_time)
+                        results_dictionary[benchmark][test_file] = res
+                        times_dictionary[benchmark][test_file] = timer(test_start_time, test_end_time)
                         print("Finished Test: {}\t\tTotal Time: {}".format(test_file, test_end_time - test_start_time))
                         print("*******Test Result: {}".format(res))
                         print("-------------------------------")
-            print("Benchmark {} Finished, redirected to {}.".format(benchmark_stripped, redirection_file))
+            print("Benchmark {} Finished, redirected to {}.".format(benchmark, redirection_file))
 
     print("Finished All Suits, total time: {}".format(time() - startTime))
     table_print_res(results_dictionary, times_dictionary)
