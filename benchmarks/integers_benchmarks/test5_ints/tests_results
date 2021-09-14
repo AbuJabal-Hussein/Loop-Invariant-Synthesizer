@@ -1,16 +1,16 @@
-Starting Test Suit: test5_ints
+Starting Test Suit: benchmarks\integers_benchmarks\test5_ints
 -------------------------------
 Starting Test: test5_ints.py
-Finished Test: test5_ints.py		Total Time: 13.578120231628418
-*******Test Result: Timed Out
+Finished Test: test5_ints.py		Total Time: 82.35280895233154
+*******Test Result: Found inv: i<n
 -------------------------------
 -------------------------------
 Starting Test: test5_ints2.py
-Finished Test: test5_ints2.py		Total Time: 13.578794002532959
-*******Test Result: Timed Out
+Finished Test: test5_ints2.py		Total Time: 84.18248772621155
+*******Test Result: Found inv: i<n
 -------------------------------
 -------------------------------
 Starting Test: test5_ints3.py
-Finished Test: test5_ints3.py		Total Time: 13.719773292541504
+Finished Test: test5_ints3.py		Total Time: 13500.5038840770721
 *******Test Result: Timed Out
 -------------------------------

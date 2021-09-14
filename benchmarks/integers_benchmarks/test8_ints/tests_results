@@ -1,16 +1,16 @@
-Starting Test Suit: test8_ints
+Starting Test Suit: benchmarks\integers_benchmarks\test8_ints
 -------------------------------
 Starting Test: test8_ints.py
-Finished Test: test8_ints.py		Total Time: 13.460142135620117
-*******Test Result: Timed Out
+Finished Test: test8_ints.py		Total Time: 15.104736089706421
+*******Test Result: Found inv: n<=i
 -------------------------------
 -------------------------------
 Starting Test: test8_ints2.py
-Finished Test: test8_ints2.py		Total Time: 13.237719297409058
-*******Test Result: Timed Out
+Finished Test: test8_ints2.py		Total Time: 14.399990320205688
+*******Test Result: Found inv: n<=i
 -------------------------------
 -------------------------------
 Starting Test: test8_ints3.py
-Finished Test: test8_ints3.py		Total Time: 13.780814170837402
-*******Test Result: Timed Out
+Finished Test: test8_ints3.py		Total Time: 14.310975313186646
+*******Test Result: Found inv: i>=n
 -------------------------------

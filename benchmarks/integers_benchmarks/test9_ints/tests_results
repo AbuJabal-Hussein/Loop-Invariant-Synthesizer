@@ -1,16 +1,16 @@
-Starting Test Suit: test9_ints
+Starting Test Suit: benchmarks\integers_benchmarks\test9_ints
 -------------------------------
 Starting Test: test9_ints.py
-Finished Test: test9_ints.py		Total Time: 13.713327646255493
-*******Test Result: Timed Out
+Finished Test: test9_ints.py		Total Time: 15.124252796173096
+*******Test Result: Found inv: x>=i
 -------------------------------
 -------------------------------
 Starting Test: test9_ints2.py
-Finished Test: test9_ints2.py		Total Time: 13.389137268066406
-*******Test Result: Timed Out
+Finished Test: test9_ints2.py		Total Time: 36.415473222732544
+*******Test Result: Found inv: i<=x
 -------------------------------
 -------------------------------
 Starting Test: test9_ints3.py
-Finished Test: test9_ints3.py		Total Time: 13.187501668930054
-*******Test Result: Timed Out
+Finished Test: test9_ints3.py		Total Time: 36.160874128341675
+*******Test Result: Found inv: n!=x
 -------------------------------

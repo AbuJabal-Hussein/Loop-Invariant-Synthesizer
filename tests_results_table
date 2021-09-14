@@ -1,4 +1,21 @@
                 Test name                   Result                     Time
-            test6_stringsFound inv: (i-count)>=(count-i)              00:02:34.93
-       test6_strings_fail            Files Missing                     -1.0
-    test6_strings_holds_b            Files Missing                     -1.0
+               test0_ints          Found inv: i<=x              00:00:11.59
+              test0_ints2          Found inv: x>=i              00:00:11.88
+              test0_ints3          Found inv: i<=x              00:00:14.61
+               test1_ints                Timed Out              03:45:01.28
+               test2_ints          Found inv: y>=i              00:00:44.49
+              test2_ints2                Timed Out              03:45:01.36
+              test2_ints3          Found inv: x>=i              00:00:36.05
+               test4_ints          Found inv: i<=n              00:00:15.68
+              test4_ints2          Found inv: i>=n              00:00:16.08
+               test5_ints           Found inv: i<n              00:01:22.35
+              test5_ints2           Found inv: i<n              00:01:24.18
+              test5_ints3                Timed Out              03:45:01.50
+               test7_intsFound inv: (num+revrsed_num)>=(num-revrsed_num)              00:16:11.77
+              test7_ints2Found inv: (num-revrsed_num)<=(revrsed_num+num)              00:13:36.18
+               test8_ints          Found inv: n<=i              00:00:15.10
+              test8_ints2          Found inv: n<=i              00:00:14.40
+              test8_ints3          Found inv: i>=n              00:00:14.31
+               test9_ints          Found inv: x>=i              00:00:15.12
+              test9_ints2          Found inv: i<=x              00:00:36.42
+              test9_ints3          Found inv: n!=x              00:00:36.16
