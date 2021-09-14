@@ -1,34 +1,4 @@
                 Test name                   Result                     Time
-            test1_strings  Found inv: isPalindrome              00:00:03.21
-           test1_strings2  Found inv: isPalindrome              00:00:03.08
-   test1_strings_not_poli                Timed Out              00:00:07.55
-            test2_strings                Timed Out              00:00:07.95
-      test2_strings_holds                Timed Out              00:00:06.99
-            test3_strings                Timed Out              00:00:07.61
-            test4_strings                Timed Out              00:00:07.59
-            test5_strings                Timed Out              00:00:07.32
-            test6_strings                Timed Out              00:00:07.14
-       test6_strings_fail                Timed Out              00:00:07.39
-    test6_strings_holds_b                Timed Out              00:00:07.43
-             test7_hybrid                Timed Out              00:00:06.99
-            test7_hybrid2                Timed Out              00:00:07.61
-               test0_ints                Timed Out              00:00:07.22
-              test0_ints2                Timed Out              00:00:06.88
-              test0_ints3                Timed Out              00:00:07.31
-               test1_ints                Timed Out              00:00:06.78
-               test2_ints                Timed Out              00:00:06.68
-              test2_ints2                Timed Out              00:00:06.71
-              test2_ints3                Timed Out              00:00:06.74
-               test4_ints                Timed Out              00:00:06.70
-              test4_ints2                Timed Out              00:00:07.49
-               test5_ints                Timed Out              00:00:07.13
-              test5_ints2                Timed Out              00:00:06.88
-              test5_ints3                Timed Out              00:00:07.54
-               test7_ints                Timed Out              00:00:07.65
-              test7_ints2                Timed Out              00:00:07.39
-               test8_ints                Timed Out              00:00:06.66
-              test8_ints2                Timed Out              00:00:06.60
-              test8_ints3                Timed Out              00:00:06.99
-               test9_ints                Timed Out              00:00:06.75
-              test9_ints2                Timed Out              00:00:07.12
-              test9_ints3                Timed Out              00:00:07.18
+            test6_stringsFound inv: (i-count)>=(count-i)              00:02:34.93
+       test6_strings_fail            Files Missing                     -1.0
+    test6_strings_holds_b            Files Missing                     -1.0
