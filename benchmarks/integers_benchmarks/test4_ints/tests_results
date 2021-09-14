@@ -1,6 +1,11 @@
-Starting Test Suit: test4_ints
+Starting Test Suit: benchmarks\integers_benchmarks\test4_ints
 -------------------------------
 Starting Test: test4_ints.py
-Finished Test: test4_ints.py		Total Time: 13.43749713897705
-*******Test Result: Timed Out
+Finished Test: test4_ints.py		Total Time: 15.679794073104858
+*******Test Result: Found inv: i<=n
+-------------------------------
+-------------------------------
+Starting Test: test4_ints2.py
+Finished Test: test4_ints2.py		Total Time: 16.080023765563965
+*******Test Result: Found inv: i>=n
 -------------------------------

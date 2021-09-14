@@ -1,11 +1,11 @@
-Starting Test Suit: test7_ints
+Starting Test Suit: benchmarks\integers_benchmarks\test7_ints
 -------------------------------
 Starting Test: test7_ints.py
-Finished Test: test7_ints.py		Total Time: 13.526362419128418
-*******Test Result: Timed Out
+Finished Test: test7_ints.py		Total Time: 971.769110918045
+*******Test Result: Found inv: (num+revrsed_num)>=(num-revrsed_num)
 -------------------------------
 -------------------------------
 Starting Test: test7_ints2.py
-Finished Test: test7_ints2.py		Total Time: 13.453125
-*******Test Result: Timed Out
+Finished Test: test7_ints2.py		Total Time: 816.1754052639008
+*******Test Result: Found inv: (num-revrsed_num)<=(revrsed_num+num)
 -------------------------------
