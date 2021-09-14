@@ -1,0 +1,6 @@
+Starting Test Suit: benchmarks\hybrid_benchmarks\test6
+-------------------------------
+Starting Test: test6_hybrid.py
+Finished Test: test6_hybrid.py		Total Time: 625.8559937477112
+*******Test Result: Found inv: i>=j
+-------------------------------

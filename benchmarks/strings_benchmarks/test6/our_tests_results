@@ -1,0 +1,16 @@
+Starting Test Suit: benchmarks\strings_benchmarks\test6
+-------------------------------
+Starting Test: test6_strings.py
+Finished Test: test6_strings.py		Total Time: 154.93179154396057
+*******Test Result: Found inv: (i-count)>=(count-i)
+-------------------------------
+-------------------------------
+Starting Test: test6_strings_fail.py
+Finished Test: test6_strings_fail.py		Total Time: 9001.8413785455257
+*******Test Result: Timed Out
+-------------------------------
+-------------------------------
+Starting Test: test6_strings_holds_b.py
+Finished Test: test6_strings_holds_b.py		Total Time: 138.5999345779419
+*******Test Result: Found inv: i>=count
+-------------------------------

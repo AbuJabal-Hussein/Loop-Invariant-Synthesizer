@@ -1,4 +1,12 @@
                 Test name                   Result                     Time
+             test1_hybrid                Timed Out              02:30:01.61
+             test2_hybrid                Timed Out              02:30:31.55
+             test3_hybridFound inv: substring(str1,x,x)==substring(str1,x,i)              00:13:51.43
+             test4_hybrid   Found inv: loopnum>res              00:41:53.93
+             test5_hybrid Found inv: len(str1) > i              00:04:03.08
+             test6_hybrid          Found inv: i>=j              00:10:25.86
+             test7_hybrid        Found inv: i<=num              00:06:01.63
+            test7_hybrid2        Found inv: num>=i              00:05:59.73			 
                test0_ints          Found inv: i<=x              00:00:11.59
               test0_ints2          Found inv: x>=i              00:00:11.88
               test0_ints3          Found inv: i<=x              00:00:14.61
@@ -19,3 +27,14 @@
                test9_ints          Found inv: x>=i              00:00:15.12
               test9_ints2          Found inv: i<=x              00:00:36.42
               test9_ints3          Found inv: n!=x              00:00:36.16
+			test1_strings  Found inv: isPalindrome				00:00:01.93
+		   test1_strings2  Found inv: isPalindrome				00:00:02.40
+   test1_strings_not_poli  				 Timed Out				02:30:17.71
+            test2_strings                Timed Out              02:30:05.49
+      test2_strings_holds                Timed Out              02:30:13.55
+            test3_strings  Found inv: (num+i)>=num              00:02:43.26
+            test4_stringsFound inv: (i+strLen)>=(strLen-i)              00:02:16.05
+            test5_strings     Found inv: i<=strLen              00:03:32.10
+            test6_stringsFound inv: (i-count)>=(count-i)              00:02:34.93
+       test6_strings_fail                Timed Out              02:30:01.84
+    test6_strings_holds_b      Found inv: i>=count              00:02:18.60	  

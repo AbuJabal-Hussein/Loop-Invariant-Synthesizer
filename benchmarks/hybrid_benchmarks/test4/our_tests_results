@@ -1,0 +1,6 @@
+Starting Test Suit: benchmarks\hybrid_benchmarks\test4
+-------------------------------
+Starting Test: test4_hybrid.py
+Finished Test: test4_hybrid.py		Total Time: 2513.927539587021
+*******Test Result: Found inv: loopnum>res
+-------------------------------

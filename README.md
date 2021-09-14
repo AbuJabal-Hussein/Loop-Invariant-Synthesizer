@@ -1,11 +1,18 @@
 
-
 # Loop-Invariant-Synthesizer
-This is the final project of the Software Synthesis and Automated Reasoning course
+This is the final project of the Software Synthesis and Automated Reasoning course.  
+The purpose of this project is to synthesize a loop invariant, given a python program that contains a single loop at most, and prove some properties of the program using said invariant.
+ 
+####Designed, developed and implemented by:  
+&nbsp;&nbsp;&nbsp;&nbsp;Hussein Abu Jabal, hussein.ab@campus.technion.ac.il  
+&nbsp;&nbsp;&nbsp;&nbsp;Siraj Othman, siraj.othman@campus.technion.ac.il
 
 # Running Tests Benchmarks
-The script for running the tests benchmarks can be invoked by running the main file and adding --tests to the script.
-
+The script for running the tests benchmarks can be invoked by running the main file and adding --tests to the script.  
+The tests results are summarized in a table in the file ./tests_results_table , and each test has a results file in its directory called tests_results.  
+Our results are shown respectively in files: ./our_tests_results_table , our_tests_result  
+**Note**: Some tests are heavy, so they consume a lot of resources (CPU and memory) and take a lot of time.
+  
 # Timeout Option
 It is possible to provide a timeout for each input python program run, by adding "--time-out" (or '-t' for short), with default value of **8 minutes**.
 This option can be added regardless of run mode, meaning it can be added whether you are running the test benchmarks or using the tool with your personal inputs for your own run.
@@ -48,11 +55,12 @@ Examples:
 You can provide unreachable states to the synthesizer, to narrow down the invariant search. It can be done by writing states in the examples file.
 The name convention to follow when using in **tests/benchmarks**: `examples_<test name>`  eg. `examples_test1_ints` 
 While the states format (the 'syntax' inside the file) should follow the convention (please cover all the input python code's variables in each state(row)):
-var_name type value\<unprintable character>var_name type value\<unprintable character>\<unprintable character>\<True or False> 
+var_name type value\<unprintable character>var_name type value\<unprintable character>\<unprintable character>\<True or False>  
+such that: unprintable character := '\x1F' 
 
     i int 6x int 20y int 0False
     i int 0x int 16y int 0True
-**Note**: Make sure you copy the examples from the code segment above, as there is unprintable separator between the tuples.
+**Note**: Make sure you copy the examples from the code segment above, as there is unprintable separator (ASCII code '\x1F') between the tuples.
  
  
 

@@ -1,0 +1,11 @@
+Starting Test Suit: benchmarks\hybrid_benchmarks\test7
+-------------------------------
+Starting Test: test7_hybrid.py
+Finished Test: test7_hybrid.py		Total Time: 361.6347165107727
+*******Test Result: Found inv: i<=num
+-------------------------------
+-------------------------------
+Starting Test: test7_hybrid2.py
+Finished Test: test7_hybrid2.py		Total Time: 359.73481345176697
+*******Test Result: Found inv: num>=i
+-------------------------------

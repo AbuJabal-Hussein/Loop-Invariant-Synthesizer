@@ -1,0 +1,11 @@
+Starting Test Suit: benchmarks\strings_benchmarks\test2
+-------------------------------
+Starting Test: test2_strings.py
+Finished Test: test2_strings.py		Total Time: 9005.48655796051
+*******Test Result: Timed Out
+-------------------------------
+-------------------------------
+Starting Test: test2_strings_holds.py
+Finished Test: test2_strings_holds.py		Total Time: 9013.55348944664
+*******Test Result: Timed Out
+-------------------------------

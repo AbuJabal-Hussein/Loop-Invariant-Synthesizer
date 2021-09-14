@@ -1,0 +1,6 @@
+Starting Test Suit: benchmarks\strings_benchmarks\test3
+-------------------------------
+Starting Test: test3_strings.py
+Finished Test: test3_strings.py		Total Time: 163.30819129943848
+*******Test Result: Found inv: (num+i)>=num
+-------------------------------

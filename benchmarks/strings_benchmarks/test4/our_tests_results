@@ -1,0 +1,6 @@
+Starting Test Suit: benchmarks\strings_benchmarks\test4
+-------------------------------
+Starting Test: test4_strings.py
+Finished Test: test4_strings.py		Total Time: 136.05303287506104
+*******Test Result: Found inv: (i+strLen)>=(strLen-i)
+-------------------------------

@@ -1,0 +1,6 @@
+Starting Test Suit: benchmarks\hybrid_benchmarks\test3
+-------------------------------
+Starting Test: test3_hybrid.py
+Finished Test: test3_hybrid.py		Total Time: 831.4290392398834
+*******Test Result: Found inv: substring(str1,x,x)==substring(str1,x,i)
+-------------------------------

@@ -313,4 +313,4 @@ if __name__ == '__main__':
         exit(1)
 
     run(args.program_file, args.grammar_file, args.conds_file, timeout=args.timeout * 60,
-        examples_file=args.examples_file)
+        examples_file=args.examples_file, omit_print=True)
